@@ -32,6 +32,9 @@ export default function VocabularyPage() {
                   <h3 className="font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink">
                     {entry.word}
                   </h3>
+                  <p className="mt-2 text-xs uppercase tracking-[0.18em] text-clay">
+                    From {entry.articleSlug.replaceAll("-", " ")}
+                  </p>
                   <p className="mt-3 text-sm leading-7 text-clay">{entry.sentence}</p>
                 </div>
               </div>

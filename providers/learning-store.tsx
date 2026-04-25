@@ -15,6 +15,7 @@ type LearningStoreValue = {
   savedWords: SavedVocabulary[];
   bookmarkedSlugs: string[];
   saveWord: (entry: Omit<SavedVocabulary, "id">) => void;
+  hasSavedWord: (word: string, sentence: string) => boolean;
   removeWord: (id: string) => void;
   toggleBookmark: (slug: string) => void;
 };
@@ -85,6 +86,20 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             ...current
           ];
         });
+      },
+      hasSavedWord: (word, sentence) => {
+        const normalizedWord = word.trim().toLowerCase();
+        const normalizedSentence = sentence.trim();
+
+        if (!normalizedWord || !normalizedSentence) {
+          return false;
+        }
+
+        return savedWords.some(
+          (item) =>
+            item.word.toLowerCase() === normalizedWord &&
+            item.sentence === normalizedSentence
+        );
       },
       removeWord: (id) => {
         setSavedWords((current) => current.filter((item) => item.id !== id));

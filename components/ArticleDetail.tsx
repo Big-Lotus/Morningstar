@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Article } from "@/lib/types";
+import { useLearningStore } from "@/providers/learning-store";
 
 type SelectionState = {
   text: string;
@@ -16,6 +17,7 @@ type ArticleDetailProps = {
 export function ArticleDetail({ article }: ArticleDetailProps) {
   const [selection, setSelection] = useState<SelectionState>(null);
   const readingRef = useRef<HTMLDivElement>(null);
+  const { saveWord, hasSavedWord } = useLearningStore();
 
   useEffect(() => {
     const handleSelection = () => {
@@ -52,6 +54,10 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
     document.addEventListener("selectionchange", handleSelection);
     return () => document.removeEventListener("selectionchange", handleSelection);
   }, []);
+
+  const isSaved = selection
+    ? hasSavedWord(selection.text, selection.sentence)
+    : false;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
@@ -125,6 +131,25 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
                 "Try selecting a word or sentence from the summary or the article."}
             </p>
           </div>
+
+          {selection ? (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() =>
+                  saveWord({
+                    word: selection.text,
+                    sentence: selection.sentence,
+                    articleSlug: article.slug
+                  })
+                }
+                disabled={isSaved}
+                className="w-full rounded-full bg-moss px-4 py-3 text-sm font-medium text-paper transition hover:bg-ink disabled:cursor-not-allowed disabled:bg-line disabled:text-clay"
+              >
+                {isSaved ? "Saved" : "Save Word"}
+              </button>
+            </div>
+          ) : null}
         </div>
       </aside>
     </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { VocabularyItem } from "@/components/VocabularyItem";
 import { useLearningStore } from "@/providers/learning-store";
 
 export default function VocabularyPage() {
@@ -23,7 +22,21 @@ export default function VocabularyPage() {
 
       <section className="mt-8 space-y-4">
         {savedWords.length > 0 ? (
-          savedWords.map((entry) => <VocabularyItem key={entry.id} entry={entry} />)
+          savedWords.map((entry) => (
+            <article
+              key={entry.id}
+              className="rounded-[1.75rem] border border-line bg-paper/95 p-5 shadow-soft"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink">
+                    {entry.word}
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-clay">{entry.sentence}</p>
+                </div>
+              </div>
+            </article>
+          ))
         ) : (
           <div className="rounded-[2rem] border border-dashed border-line bg-paper/70 p-8 text-center text-clay">
             No saved words yet. Select text while reading an article to start

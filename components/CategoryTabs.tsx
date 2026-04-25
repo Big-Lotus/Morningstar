@@ -1,5 +1,3 @@
-"use client";
-
 import clsx from "clsx";
 
 import { Category } from "@/lib/types";
@@ -7,24 +5,17 @@ import { Category } from "@/lib/types";
 type CategoryTabsProps = {
   categories: Category[];
   activeCategory: Category | "All";
-  onChange: (category: Category | "All") => void;
 };
 
-export function CategoryTabs({
-  categories,
-  activeCategory,
-  onChange
-}: CategoryTabsProps) {
+export function CategoryTabs({ categories, activeCategory }: CategoryTabsProps) {
   return (
     <div className="flex flex-wrap gap-3">
       {["All", ...categories].map((category) => {
         const active = activeCategory === category;
 
         return (
-          <button
+          <div
             key={category}
-            type="button"
-            onClick={() => onChange(category as Category | "All")}
             className={clsx(
               "rounded-full border px-4 py-2 text-sm transition-all",
               active
@@ -33,7 +24,7 @@ export function CategoryTabs({
             )}
           >
             {category}
-          </button>
+          </div>
         );
       })}
     </div>

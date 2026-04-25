@@ -6,7 +6,7 @@ type CarouselProps = {
   children: React.ReactNode;
 };
 
-export function Carousel({ children }: CarouselProps) {
+export function ArticleCarousel({ children }: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollByCard = (direction: "left" | "right") => {
@@ -24,7 +24,7 @@ export function Carousel({ children }: CarouselProps) {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-clay">
             Daily News
@@ -39,6 +39,7 @@ export function Carousel({ children }: CarouselProps) {
             type="button"
             onClick={() => scrollByCard("left")}
             className="rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+            aria-label="Scroll articles left"
           >
             Prev
           </button>
@@ -46,6 +47,7 @@ export function Carousel({ children }: CarouselProps) {
             type="button"
             onClick={() => scrollByCard("right")}
             className="rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+            aria-label="Scroll articles right"
           >
             Next
           </button>
@@ -54,7 +56,7 @@ export function Carousel({ children }: CarouselProps) {
 
       <div
         ref={containerRef}
-        className="hide-scrollbar flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pt-2"
+        className="hide-scrollbar flex gap-5 overflow-x-auto pb-4 pt-2"
       >
         {children}
       </div>

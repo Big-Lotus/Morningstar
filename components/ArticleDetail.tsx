@@ -17,7 +17,8 @@ type ArticleDetailProps = {
 export function ArticleDetail({ article }: ArticleDetailProps) {
   const [selection, setSelection] = useState<SelectionState>(null);
   const readingRef = useRef<HTMLDivElement>(null);
-  const { saveWord, hasSavedWord } = useLearningStore();
+  const { saveWord, hasSavedWord, bookmarkedSlugs, toggleBookmark } =
+    useLearningStore();
 
   useEffect(() => {
     const handleSelection = () => {
@@ -58,6 +59,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
   const isSaved = selection
     ? hasSavedWord(selection.text, selection.sentence)
     : false;
+  const isBookmarked = bookmarkedSlugs.includes(article.slug);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
@@ -66,9 +68,18 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           <p className="text-xs uppercase tracking-[0.24em] text-clay">
             {article.category}
           </p>
-          <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
-            {article.title}
-          </h1>
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <h1 className="max-w-3xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
+              {article.title}
+            </h1>
+            <button
+              type="button"
+              onClick={() => toggleBookmark(article.slug)}
+              className="rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+            >
+              {isBookmarked ? "Bookmarked" : "Bookmark"}
+            </button>
+          </div>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-clay">
             Read the summary first, then settle into the original article at a
             slower pace.

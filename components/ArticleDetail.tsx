@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Article } from "@/lib/types";
-import { useLearningStore } from "@/providers/learning-store";
-import { VocabularyPanel } from "@/components/VocabularyPanel";
 
 type SelectionState = {
-  word: string;
+  text: string;
   sentence: string;
 } | null;
 
@@ -16,7 +14,6 @@ type ArticleDetailProps = {
 };
 
 export function ArticleDetail({ article }: ArticleDetailProps) {
-  const { bookmarkedSlugs, toggleBookmark } = useLearningStore();
   const [selection, setSelection] = useState<SelectionState>(null);
   const readingRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +44,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
       const sentence = sentenceHost?.getAttribute("data-sentence") ?? selectedText;
 
       setSelection({
-        word: selectedText,
+        text: selectedText,
         sentence
       });
     };
@@ -56,32 +53,25 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
     return () => document.removeEventListener("selectionchange", handleSelection);
   }, []);
 
-  const bookmarked = bookmarkedSlugs.includes(article.slug);
-
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_310px] lg:items-start">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
       <main ref={readingRef} className="mx-auto max-w-reading">
-        <div className="mb-8 rounded-[2rem] border border-line bg-paper/90 p-8 shadow-card">
+        <section className="rounded-[2rem] border border-line bg-paper/90 p-8 shadow-card md:p-10">
           <p className="text-xs uppercase tracking-[0.24em] text-clay">
             {article.category}
           </p>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-            <h1 className="max-w-2xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink">
-              {article.title}
-            </h1>
-            <button
-              type="button"
-              onClick={() => toggleBookmark(article.slug)}
-              className="rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
-            >
-              {bookmarked ? "Bookmarked" : "Bookmark"}
-            </button>
-          </div>
-        </div>
+          <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
+            {article.title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-sm leading-7 text-clay">
+            Read the summary first, then settle into the original article at a
+            slower pace.
+          </p>
+        </section>
 
-        <section className="mb-8 rounded-[2rem] border border-line bg-accent/70 p-8 shadow-soft">
+        <section className="mt-8 rounded-[2rem] border border-line bg-accent/70 p-8 shadow-soft md:p-10">
           <p className="text-xs uppercase tracking-[0.24em] text-clay">Summary</p>
-          <div className="reading-prose mt-4 text-lg leading-8 text-ink">
+          <div className="reading-prose mt-5 text-lg leading-8 text-ink">
             {article.summary.map((sentence) => (
               <p key={sentence} data-sentence={sentence}>
                 {sentence}
@@ -90,7 +80,7 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-line bg-paper/90 p-8 shadow-card">
+        <section className="mt-8 rounded-[2rem] border border-line bg-paper/90 p-8 shadow-card md:p-10">
           <p className="text-xs uppercase tracking-[0.24em] text-clay">
             Original Article
           </p>
@@ -104,9 +94,39 @@ export function ArticleDetail({ article }: ArticleDetailProps) {
         </section>
       </main>
 
-      <div className="lg:sticky lg:top-6">
-        <VocabularyPanel articleSlug={article.slug} selection={selection} />
-      </div>
+      <aside className="lg:sticky lg:top-6">
+        <div className="rounded-[2rem] border border-line bg-paper/95 p-5 shadow-soft">
+          <p className="text-xs uppercase tracking-[0.22em] text-clay">
+            Margin Notes
+          </p>
+          <h2 className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink">
+            Select a word or sentence
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-clay">
+            This space is reserved for vocabulary interaction in the next step.
+            For now, selected text appears here as a quiet reading cue.
+          </p>
+
+          <div className="mt-5 rounded-[1.5rem] bg-accent/60 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-clay">
+              Selected Text
+            </p>
+            <p className="mt-2 min-h-12 font-[family-name:var(--font-heading)] text-2xl font-semibold text-ink">
+              {selection?.text ?? "Nothing selected yet"}
+            </p>
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-line bg-paper px-4 py-3">
+            <p className="text-xs uppercase tracking-[0.18em] text-clay">
+              Sentence
+            </p>
+            <p className="mt-2 min-h-24 text-sm leading-7 text-ink">
+              {selection?.sentence ??
+                "Try selecting a word or sentence from the summary or the article."}
+            </p>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

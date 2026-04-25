@@ -6,6 +6,8 @@
   color-scheme: light;
   --font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
   --font-body: "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
+  --soft-duration: 220ms;
+  --soft-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
@@ -18,15 +20,22 @@ body {
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 28rem),
     linear-gradient(180deg, #f8f3eb 0%, #f4ede2 100%);
   color: #312820;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgba(176, 161, 140, 0.35);
+  background: rgba(194, 176, 151, 0.3);
+  color: #312820;
+  text-shadow: none;
 }
 
 .reading-prose p {
   margin-top: 0;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.55rem;
+}
+
+.reading-prose p:last-child {
+  margin-bottom: 0;
 }
 
 .hide-scrollbar {
@@ -35,4 +44,40 @@ body {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.soft-ring {
+  transition:
+    box-shadow var(--soft-duration) var(--soft-ease),
+    border-color var(--soft-duration) var(--soft-ease),
+    transform var(--soft-duration) var(--soft-ease),
+    background-color var(--soft-duration) var(--soft-ease),
+    color var(--soft-duration) var(--soft-ease),
+    opacity var(--soft-duration) var(--soft-ease);
+}
+
+.soft-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(141, 125, 109, 0.18);
+}
+
+.soft-fade-in {
+  animation: softFadeIn var(--soft-duration) var(--soft-ease);
+}
+
+@keyframes softFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

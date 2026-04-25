@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { Article } from "@/lib/types";
 import { useLearningStore } from "@/providers/learning-store";
@@ -12,20 +13,32 @@ type ArticleCardProps = {
 export function ArticleCard({ article }: ArticleCardProps) {
   const { bookmarkedSlugs, toggleBookmark } = useLearningStore();
   const isBookmarked = bookmarkedSlugs.includes(article.slug);
+  const [isPressed, setIsPressed] = useState(false);
 
   return (
-    <article className="group relative h-[220px] min-w-[270px] snap-start rounded-[2rem] border border-line bg-paper/95 p-7 shadow-card transition duration-300 hover:-translate-y-1 hover:border-clay md:min-w-[320px]">
+    <article className="group relative h-[220px] min-w-[270px] snap-start rounded-[2rem] border border-line bg-paper/95 p-6 shadow-card soft-ring transition duration-300 hover:-translate-y-1 hover:border-clay hover:shadow-[0_24px_48px_rgba(83,63,47,0.12)] md:min-w-[320px] md:p-7">
       <button
         type="button"
-        onClick={() => toggleBookmark(article.slug)}
+        onClick={() => {
+          setIsPressed(true);
+          toggleBookmark(article.slug);
+          window.setTimeout(() => setIsPressed(false), 220);
+        }}
         aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-        className="absolute right-5 top-5 rounded-full border border-line bg-paper/95 px-3 py-1 text-xs uppercase tracking-[0.18em] text-clay transition hover:border-clay hover:text-ink"
+        className={`soft-ring absolute right-4 top-4 rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] transition md:right-5 md:top-5 ${
+          isBookmarked
+            ? "border-moss/40 bg-moss/10 text-moss"
+            : "border-line bg-paper/95 text-clay hover:border-clay hover:text-ink"
+        } ${isPressed ? "scale-[0.98]" : ""}`}
       >
         {isBookmarked ? "Saved" : "Save"}
       </button>
 
-      <Link href={`/articles/${article.slug}`} className="flex h-full items-start pr-20 text-left">
-        <h3 className="font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight text-ink transition-colors group-hover:text-moss">
+      <Link
+        href={`/articles/${article.slug}`}
+        className="soft-ring flex h-full items-start pr-20 pt-8 text-left md:pt-10"
+      >
+        <h3 className="max-w-[14ch] font-[family-name:var(--font-heading)] text-[1.9rem] font-semibold leading-[1.08] text-ink transition-colors duration-300 group-hover:text-moss md:text-3xl">
           {article.title}
         </h3>
       </Link>

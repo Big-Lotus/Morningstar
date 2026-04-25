@@ -14,6 +14,7 @@ export function ArticleCarousel({ children }: CarouselProps) {
     startScrollLeft: number;
     moved: boolean;
   } | null>(null);
+  const shouldSuppressClickRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
 
   const getScrollAmount = () => {
@@ -77,6 +78,7 @@ export function ArticleCarousel({ children }: CarouselProps) {
         ...dragState,
         moved: true
       };
+      shouldSuppressClickRef.current = true;
     }
 
     container.scrollLeft = dragState.startScrollLeft - deltaX;
@@ -99,13 +101,13 @@ export function ArticleCarousel({ children }: CarouselProps) {
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-clay">
             Daily News
           </p>
-          <h2 className="mt-2 font-[family-name:var(--font-heading)] text-4xl font-semibold text-ink">
+          <h2 className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink md:text-4xl">
             Read slowly. Return tomorrow.
           </h2>
         </div>
@@ -114,7 +116,7 @@ export function ArticleCarousel({ children }: CarouselProps) {
           <button
             type="button"
             onClick={() => scrollByCard("left")}
-            className="rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+            className="soft-ring rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:-translate-y-0.5 hover:border-clay hover:bg-paper hover:text-ink"
             aria-label="Scroll articles left"
           >
             Prev
@@ -122,7 +124,7 @@ export function ArticleCarousel({ children }: CarouselProps) {
           <button
             type="button"
             onClick={() => scrollByCard("right")}
-            className="rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+            className="soft-ring rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:-translate-y-0.5 hover:border-clay hover:bg-paper hover:text-ink"
             aria-label="Scroll articles right"
           >
             Next
@@ -136,10 +138,22 @@ export function ArticleCarousel({ children }: CarouselProps) {
         onPointerMove={handlePointerMove}
         onPointerUp={(event) => finishDrag(event.pointerId)}
         onPointerCancel={(event) => finishDrag(event.pointerId)}
-        className="hide-scrollbar flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pt-2 scroll-smooth"
+        onClickCapture={(event) => {
+          if (!shouldSuppressClickRef.current) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          window.setTimeout(() => {
+            shouldSuppressClickRef.current = false;
+          }, 0);
+        }}
+        className="hide-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 pt-2 scroll-smooth md:mx-0 md:gap-5 md:px-0"
         style={{
           cursor: isDragging ? "grabbing" : "grab",
-          WebkitOverflowScrolling: "touch"
+          WebkitOverflowScrolling: "touch",
+          scrollPaddingLeft: "1.25rem"
         }}
       >
         {children}

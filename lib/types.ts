@@ -4,8 +4,7 @@ export type Article = {
   slug: string;
   category: Category;
   title: string;
-  summary: string[];
-  content: string[];
+  sourceUrl: string;
 };
 
 export type Topic = {

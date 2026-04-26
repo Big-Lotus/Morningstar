@@ -35,7 +35,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       </button>
 
       <Link
-        href={`/articles/${article.slug}`}
+        href={article.sourceUrl}
         className="soft-ring flex h-full items-start pr-20 pt-8 text-left md:pt-10"
       >
         <h3 className="max-w-[14ch] font-[family-name:var(--font-heading)] text-[1.9rem] font-semibold leading-[1.08] text-ink transition-colors duration-300 group-hover:text-moss md:text-3xl">

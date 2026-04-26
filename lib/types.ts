@@ -8,6 +8,14 @@ export type Article = {
   content: string[];
 };
 
+export type Topic = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string | null;
+  createdAt: string;
+};
+
 export type SavedVocabulary = {
   id: string;
   word: string;

@@ -1,13 +1,13 @@
 "use client";
 
-import { ArticleCard } from "@/components/ArticleCard";
+import { TopicCard } from "@/components/TopicCard";
 import { useLearningStore } from "@/providers/learning-store";
-import { articles } from "@/lib/data";
+import { topics } from "@/lib/data";
 
 export default function BookmarkPage() {
   const { bookmarkedSlugs } = useLearningStore();
-  const bookmarkedArticles = articles.filter((article) =>
-    bookmarkedSlugs.includes(article.slug)
+  const bookmarkedTopics = topics.filter((topic) =>
+    bookmarkedSlugs.includes(topic.slug)
   );
 
   return (
@@ -24,14 +24,14 @@ export default function BookmarkPage() {
       </section>
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">
-        {bookmarkedArticles.length > 0 ? (
-          bookmarkedArticles.map((article) => (
-            <ArticleCard key={article.slug} article={article} />
+        {bookmarkedTopics.length > 0 ? (
+          bookmarkedTopics.map((topic) => (
+            <TopicCard key={topic.id} topic={topic} />
           ))
         ) : (
           <div className="rounded-[2rem] border border-dashed border-line bg-paper/70 p-8 text-center text-clay md:col-span-2">
-            No bookmarks yet. Save an article from the reading page when you want
-            to come back later.
+            No bookmarks yet. Save a topic from the home page when you want to
+            return to that issue later.
           </div>
         )}
       </section>

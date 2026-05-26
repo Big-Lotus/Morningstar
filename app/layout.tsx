@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import "@/app/globals.css";
+import "./globals.css";
 import { LearningStoreProvider } from "@/providers/learning-store";
 
 export const metadata: Metadata = {
   title: "Saetbyeol",
-  description: "A calm editorial reading space for learning English through daily news."
+  description: "A calm topic-based learning space for building English through real issues."
 };
 
 export default function RootLayout({
@@ -28,8 +28,8 @@ export default function RootLayout({
                   Saetbyeol
                 </Link>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-clay">
-                  A calm editorial reading space for building English through one
-                  clear story at a time.
+                  A calm topic-based learning space that turns real issues into
+                  steady English practice.
                 </p>
               </div>
 
@@ -38,7 +38,7 @@ export default function RootLayout({
                   href="/"
                   className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
                 >
-                  Daily News
+                  Daily Topics
                 </Link>
                 <Link
                   href="/vocabulary"

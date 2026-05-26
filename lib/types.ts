@@ -3,15 +3,20 @@ export type Category = "World" | "Business" | "Tech" | "Culture";
 export type Article = {
   slug: string;
   category: Category;
-  title: string;
+  sourceName: string;
   sourceUrl: string;
+  publishedAt: string;
+  keyword: string;
+  intro: string;
 };
 
 export type Topic = {
   id: string;
   slug: string;
   title: string;
-  summary: string | null;
+  overview: string;
+  relatedKeywords: string[];
+  articleSlugs: string[];
   createdAt: string;
 };
 
@@ -19,5 +24,5 @@ export type SavedVocabulary = {
   id: string;
   word: string;
   sentence: string;
-  articleSlug: string;
+  topicSlug: string;
 };

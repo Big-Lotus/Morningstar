@@ -81,7 +81,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
               ...entry,
               word: normalizedWord,
               sentence: normalizedSentence,
-              id: `${entry.articleSlug}-${normalizedWord}-${current.length + 1}`
+              id: `${entry.topicSlug}-${normalizedWord}-${current.length + 1}`
             },
             ...current
           ];

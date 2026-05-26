@@ -4,9 +4,15 @@ import { useRef, useState } from "react";
 
 type CarouselProps = {
   children: React.ReactNode;
+  eyebrow?: string;
+  title: string;
 };
 
-export function ArticleCarousel({ children }: CarouselProps) {
+export function ArticleCarousel({
+  children,
+  eyebrow = "Collection",
+  title
+}: CarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<{
     pointerId: number;
@@ -105,10 +111,10 @@ export function ArticleCarousel({ children }: CarouselProps) {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-clay">
-            Daily News
+            {eyebrow}
           </p>
           <h2 className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink md:text-4xl">
-            Read slowly. Return tomorrow.
+            {title}
           </h2>
         </div>
 

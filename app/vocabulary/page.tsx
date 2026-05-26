@@ -33,7 +33,7 @@ export default function VocabularyPage() {
                     {entry.word}
                   </h3>
                   <p className="mt-2 text-xs uppercase tracking-[0.18em] text-clay">
-                    From {entry.articleSlug.replaceAll("-", " ")}
+                    From {entry.topicSlug.replaceAll("-", " ")}
                   </p>
                   <p className="mt-3 text-sm leading-7 text-clay">{entry.sentence}</p>
                 </div>
@@ -42,8 +42,8 @@ export default function VocabularyPage() {
           ))
         ) : (
           <div className="rounded-[2rem] border border-dashed border-line bg-paper/70 p-8 text-center text-clay">
-            No saved words yet. Select text while reading an article to start
-            building your notebook.
+            No saved words yet. Save vocabulary from a topic once the learning
+            view is connected.
           </div>
         )}
       </section>

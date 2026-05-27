@@ -1,8 +1,15 @@
-export type Category = "World" | "Business" | "Tech" | "Culture";
+export type Category =
+  | "Culture"
+  | "Tech"
+  | "Economy"
+  | "Global"
+  | "Science"
+  | "Society";
 
 export type Article = {
   slug: string;
   category: Category;
+  title: string;
   sourceName: string;
   sourceUrl: string;
   publishedAt: string;
@@ -25,4 +32,12 @@ export type SavedVocabulary = {
   word: string;
   sentence: string;
   topicSlug: string;
+};
+
+export type ComposedArticle = {
+  id: string;
+  title: string;
+  body: string;
+  sourceSlugs: string[];
+  createdAt: string;
 };

@@ -9,15 +9,22 @@ import {
   useState
 } from "react";
 
-import { SavedVocabulary } from "@/lib/types";
+import { Category, ComposedArticle, SavedVocabulary } from "@/lib/types";
 
 type LearningStoreValue = {
   savedWords: SavedVocabulary[];
   bookmarkedSlugs: string[];
+  selectedInterests: Category[];
+  hasCompletedOnboarding: boolean;
+  composedArticles: ComposedArticle[];
+  setSelectedInterests: (interests: Category[]) => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
   saveWord: (entry: Omit<SavedVocabulary, "id">) => void;
   hasSavedWord: (word: string, sentence: string) => boolean;
   removeWord: (id: string) => void;
   toggleBookmark: (slug: string) => void;
+  addComposedArticle: (entry: Omit<ComposedArticle, "id" | "createdAt">) => void;
 };
 
 const STORAGE_KEY = "saetbyeol-learning-store";
@@ -27,11 +34,17 @@ const LearningStoreContext = createContext<LearningStoreValue | null>(null);
 type PersistedState = {
   savedWords: SavedVocabulary[];
   bookmarkedSlugs: string[];
+  selectedInterests: Category[];
+  hasCompletedOnboarding: boolean;
+  composedArticles: ComposedArticle[];
 };
 
 export function LearningStoreProvider({ children }: PropsWithChildren) {
   const [savedWords, setSavedWords] = useState<SavedVocabulary[]>([]);
   const [bookmarkedSlugs, setBookmarkedSlugs] = useState<string[]>([]);
+  const [selectedInterests, setSelectedInterestsState] = useState<Category[]>([]);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [composedArticles, setComposedArticles] = useState<ComposedArticle[]>([]);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -42,21 +55,44 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
     const parsed = JSON.parse(raw) as PersistedState;
     setSavedWords(parsed.savedWords ?? []);
     setBookmarkedSlugs(parsed.bookmarkedSlugs ?? []);
+    setSelectedInterestsState(parsed.selectedInterests ?? []);
+    setHasCompletedOnboarding(parsed.hasCompletedOnboarding ?? false);
+    setComposedArticles(parsed.composedArticles ?? []);
   }, []);
 
   useEffect(() => {
     const payload: PersistedState = {
       savedWords,
-      bookmarkedSlugs
+      bookmarkedSlugs,
+      selectedInterests,
+      hasCompletedOnboarding,
+      composedArticles
     };
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [bookmarkedSlugs, savedWords]);
+  }, [
+    bookmarkedSlugs,
+    composedArticles,
+    hasCompletedOnboarding,
+    savedWords,
+    selectedInterests
+  ]);
 
   const value = useMemo<LearningStoreValue>(
     () => ({
       savedWords,
       bookmarkedSlugs,
+      selectedInterests,
+      hasCompletedOnboarding,
+      composedArticles,
+      setSelectedInterests: setSelectedInterestsState,
+      completeOnboarding: () => {
+        setHasCompletedOnboarding(true);
+      },
+      resetOnboarding: () => {
+        setHasCompletedOnboarding(false);
+        setSelectedInterestsState([]);
+      },
       saveWord: (entry) => {
         const normalizedWord = entry.word.trim();
         const normalizedSentence = entry.sentence.trim();
@@ -110,9 +146,34 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             ? current.filter((item) => item !== slug)
             : [...current, slug]
         );
+      },
+      addComposedArticle: (entry) => {
+        const title = entry.title.trim();
+        const body = entry.body.trim();
+
+        if (!title || !body || entry.sourceSlugs.length === 0) {
+          return;
+        }
+
+        setComposedArticles((current) => [
+          {
+            ...entry,
+            title,
+            body,
+            id: `composition-${Date.now()}`,
+            createdAt: new Date().toISOString()
+          },
+          ...current
+        ]);
       }
     }),
-    [bookmarkedSlugs, savedWords]
+    [
+      bookmarkedSlugs,
+      composedArticles,
+      hasCompletedOnboarding,
+      savedWords,
+      selectedInterests
+    ]
   );
 
   return (

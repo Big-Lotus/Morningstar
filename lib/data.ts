@@ -1,11 +1,28 @@
 import { Article, Category, Topic } from "@/lib/types";
 
-export const categories: Category[] = ["World", "Business", "Tech", "Culture"];
+export const categoryLabels: Record<Category, string> = {
+  Culture: "문화",
+  Tech: "기술",
+  Economy: "경제",
+  Global: "국제",
+  Science: "과학",
+  Society: "사회"
+};
+
+export const categories: Category[] = [
+  "Culture",
+  "Tech",
+  "Economy",
+  "Global",
+  "Science",
+  "Society"
+];
 
 export const articles: Article[] = [
   {
     slug: "city-libraries-create-evening-reading-clubs",
     category: "Culture",
+    title: "City Libraries Create Evening Reading Clubs for Busy Adults",
     sourceName: "The New York Times",
     sourceUrl: "https://www.nytimes.com/",
     publishedAt: "2026-04-24T09:00:00.000Z",
@@ -15,7 +32,8 @@ export const articles: Article[] = [
   },
   {
     slug: "small-newsletters-grow-through-trust",
-    category: "Business",
+    category: "Economy",
+    title: "Small Newsletters Grow Through Trust, Not Speed",
     sourceName: "Financial Times",
     sourceUrl: "https://www.ft.com/",
     publishedAt: "2026-04-25T07:30:00.000Z",
@@ -26,6 +44,7 @@ export const articles: Article[] = [
   {
     slug: "education-apps-add-daily-voice-notes",
     category: "Tech",
+    title: "Education Apps Add Daily Voice Notes to Support Reflection",
     sourceName: "MIT Technology Review",
     sourceUrl: "https://www.technologyreview.com/",
     publishedAt: "2026-04-26T10:15:00.000Z",
@@ -35,13 +54,36 @@ export const articles: Article[] = [
   },
   {
     slug: "local-markets-become-weekend-meeting-spaces",
-    category: "World",
+    category: "Global",
+    title: "Local Markets Become Weekend Meeting Spaces for Young Families",
     sourceName: "BBC",
     sourceUrl: "https://www.bbc.com/",
     publishedAt: "2026-04-27T06:45:00.000Z",
     keyword: "social routine",
     intro:
       "Local markets are being described as social anchors again, offering a concrete example of how ordinary places shape routines, belonging, and public language."
+  },
+  {
+    slug: "researchers-map-ocean-heat-changes",
+    category: "Science",
+    title: "Researchers Map Ocean Heat Changes With New Climate Models",
+    sourceName: "Nature",
+    sourceUrl: "https://www.nature.com/",
+    publishedAt: "2026-04-28T08:10:00.000Z",
+    keyword: "climate model",
+    intro:
+      "A new climate modeling effort gives learners a useful doorway into words about evidence, uncertainty, and long-term environmental change."
+  },
+  {
+    slug: "schools-test-phone-free-morning-routines",
+    category: "Society",
+    title: "Schools Test Phone-Free Morning Routines to Improve Focus",
+    sourceName: "NPR",
+    sourceUrl: "https://www.npr.org/",
+    publishedAt: "2026-04-29T11:20:00.000Z",
+    keyword: "attention habit",
+    intro:
+      "School routines around phone use are becoming a public discussion about focus, boundaries, and how young people begin the day."
   }
 ];
 

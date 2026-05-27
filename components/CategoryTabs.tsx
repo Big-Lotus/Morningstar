@@ -1,6 +1,7 @@
 import clsx from "clsx";
 
 import { Category } from "@/lib/types";
+import { categoryLabels } from "@/lib/data";
 
 type CategoryTabsProps = {
   categories: Category[];
@@ -8,10 +9,13 @@ type CategoryTabsProps = {
 };
 
 export function CategoryTabs({ categories, activeCategory }: CategoryTabsProps) {
+  const tabCategories: Array<Category | "All"> = ["All", ...categories];
+
   return (
     <div className="flex flex-wrap gap-3">
-      {["All", ...categories].map((category) => {
+      {tabCategories.map((category) => {
         const active = activeCategory === category;
+        const label = category === "All" ? "전체" : categoryLabels[category];
 
         return (
           <div
@@ -23,7 +27,7 @@ export function CategoryTabs({ categories, activeCategory }: CategoryTabsProps) 
                 : "border-line bg-paper/80 text-clay hover:border-clay hover:bg-paper"
             )}
           >
-            {category}
+            {label}
           </div>
         );
       })}

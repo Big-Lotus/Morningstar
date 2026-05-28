@@ -10,13 +10,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: "#f6f0e7",
-        paper: "#fbf7f1",
-        ink: "#312820",
-        clay: "#8a6f5d",
-        moss: "#69745f",
-        line: "#dccfc1",
-        accent: "#ede2d3"
+        canvas: "#f8efe0",
+        paper: "#fffaf1",
+        ink: "#1f1a16",
+        clay: "#7f6a57",
+        moss: "#e57945",
+        line: "#ead8c2",
+        accent: "#f4dfc7"
       },
       boxShadow: {
         card: "0 18px 40px rgba(83, 63, 47, 0.08)",

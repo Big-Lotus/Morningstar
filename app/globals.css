@@ -17,15 +17,16 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 28rem),
-    linear-gradient(180deg, #f8f3eb 0%, #f4ede2 100%);
-  color: #312820;
+    radial-gradient(circle at 52% 0%, rgba(229, 121, 69, 0.24), transparent 28rem),
+    radial-gradient(circle at 84% 18%, rgba(255, 187, 126, 0.24), transparent 24rem),
+    linear-gradient(180deg, #f8efe0 0%, #fff6e8 58%, #f6e2cb 100%);
+  color: #1f1a16;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgba(194, 176, 151, 0.3);
-  color: #312820;
+  background: rgba(229, 121, 69, 0.24);
+  color: #1f1a16;
   text-shadow: none;
 }
 
@@ -63,7 +64,7 @@ a {
 
 .soft-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(141, 125, 109, 0.18);
+  box-shadow: 0 0 0 4px rgba(229, 121, 69, 0.22);
 }
 
 .soft-fade-in {

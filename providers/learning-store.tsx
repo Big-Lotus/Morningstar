@@ -64,8 +64,19 @@ type LearningStoreValue = {
   addCustomArticleFromUrl: (sourceUrl: string) => string | null;
   addComposedArticle: (
     entry: Omit<ComposedArticle, "id" | "createdAt" | "analysis">
-  ) => void;
+  ) => string | null;
   shareComposition: (compositionId: string, insight: string) => void;
+  createCommunityPoll: (entry: {
+    title: string;
+    pollQuestion: string;
+    options: string[];
+  }) => void;
+  voteCommunityPoll: (entry: {
+    postId: string;
+    optionId: string;
+    opinion: string;
+  }) => void;
+  updatePollSummaryInsight: (postId: string, summaryInsight: string) => void;
   addCommunityComment: (postId: string, body: string) => void;
   deleteCommunityPost: (postId: string) => void;
   deleteCommunityComment: (postId: string, commentId: string) => void;
@@ -109,11 +120,15 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         : undefined;
 
       setAccounts(parsed.accounts ?? {});
-      setCommunityPosts(normalizeCommunityPosts(parsed.communityPosts ?? []));
+      setCommunityPosts(
+        normalizeCommunityPosts(parsed.communityPosts ?? []).filter(
+          (post) => post.title !== "good"
+        )
+      );
       setCurrentUsername(account?.username ?? null);
 
       if (account) {
-        loadUserState(account.state);
+        loadUserState(cleanUserState(account.state));
       }
 
       setIsHydrated(true);
@@ -128,7 +143,11 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         communityPosts?: CommunityPost[];
       };
 
-      setCommunityPosts(normalizeCommunityPosts(legacy.communityPosts ?? []));
+      setCommunityPosts(
+        normalizeCommunityPosts(legacy.communityPosts ?? []).filter(
+          (post) => post.title !== "good"
+        )
+      );
     }
 
     setIsHydrated(true);
@@ -329,10 +348,6 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           setCustomArticles((current) => [article, ...current]);
         }
 
-        setBookmarkedSlugs((current) =>
-          current.includes(slug) ? current : [...current, slug]
-        );
-
         return slug;
       },
       addComposedArticle: (entry) => {
@@ -345,8 +360,10 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           entry.sourceSlugs.length === 0 ||
           !currentUsername
         ) {
-          return;
+          return null;
         }
+
+        const id = `composition-${Date.now()}`;
 
         setComposedArticles((current) => [
           {
@@ -354,12 +371,14 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             title,
             requirements,
             analysis:
-              "AI analysis will appear here after the generation pipeline is connected.",
-            id: `composition-${Date.now()}`,
+              "This prototype analysis is ready for review. The full AI pipeline will later turn the selected sources and requirements into a deeper report with evidence, comparisons, and visual summaries.",
+            id,
             createdAt: new Date().toISOString()
           },
           ...current
         ]);
+
+        return id;
       },
       shareComposition: (compositionId, insight) => {
         const normalizedInsight = insight.trim();
@@ -414,6 +433,95 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             ...current
           ];
         });
+      },
+      createCommunityPoll: (entry) => {
+        const title = entry.title.trim();
+        const pollQuestion = entry.pollQuestion.trim();
+        const options = entry.options
+          .map((option) => option.trim())
+          .filter(Boolean)
+          .slice(0, 4);
+
+        if (!title || !pollQuestion || options.length < 2 || !currentUsername) {
+          return;
+        }
+
+        const createdAt = new Date().toISOString();
+
+        setCommunityPosts((current) => [
+          {
+            id: `poll-${Date.now()}`,
+            compositionId: `poll-${Date.now()}`,
+            authorName: currentUsername,
+            title,
+            insight: "Community poll",
+            requirements: pollQuestion,
+            analysis: "",
+            sourceSlugs: [],
+            sourceSnapshots: [],
+            comments: [],
+            pollQuestion,
+            pollOptions: options.map((option, index) => ({
+              id: `option-${Date.now()}-${index}`,
+              label: option
+            })),
+            pollVotes: [],
+            summaryInsight: "",
+            createdAt
+          },
+          ...current
+        ]);
+      },
+      voteCommunityPoll: (entry) => {
+        const opinion = entry.opinion.trim();
+
+        if (!currentUsername || !entry.optionId) {
+          return;
+        }
+
+        setCommunityPosts((current) =>
+          current.map((post) => {
+            if (post.id !== entry.postId || !post.pollOptions) {
+              return post;
+            }
+
+            const vote = {
+              id: `vote-${Date.now()}`,
+              authorName: currentUsername,
+              optionId: entry.optionId,
+              opinion,
+              createdAt: new Date().toISOString()
+            };
+            const existingVote = post.pollVotes?.some(
+              (item) => item.authorName === currentUsername
+            );
+
+            return {
+              ...post,
+              pollVotes: existingVote
+                ? (post.pollVotes ?? []).map((item) =>
+                    item.authorName === currentUsername ? vote : item
+                  )
+                : [...(post.pollVotes ?? []), vote]
+            };
+          })
+        );
+      },
+      updatePollSummaryInsight: (postId, summaryInsight) => {
+        if (!currentUsername) {
+          return;
+        }
+
+        setCommunityPosts((current) =>
+          current.map((post) =>
+            post.id === postId && post.authorName === currentUsername
+              ? {
+                  ...post,
+                  summaryInsight
+                }
+              : post
+          )
+        );
       },
       addCommunityComment: (postId, body) => {
         const normalizedBody = body.trim();
@@ -496,7 +604,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
     setHasCompletedOnboarding(state.hasCompletedOnboarding ?? false);
     setCustomArticles(state.customArticles ?? []);
     setComposedArticles(
-      (state.composedArticles ?? []).map((entry) => ({
+      (state.composedArticles ?? []).filter((entry) => entry.title !== "Test1").map((entry) => ({
         ...entry,
         requirements: entry.requirements ?? entry.body ?? "",
         analysis:
@@ -511,6 +619,15 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       {children}
     </LearningStoreContext.Provider>
   );
+}
+
+function cleanUserState(state: UserScopedState): UserScopedState {
+  return {
+    ...state,
+    composedArticles: (state.composedArticles ?? []).filter(
+      (entry) => entry.title !== "Test1"
+    )
+  };
 }
 
 function createCurrentUserState(state: UserScopedState): UserScopedState {

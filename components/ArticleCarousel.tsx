@@ -54,7 +54,13 @@ export function ArticleCarousel({
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     const container = containerRef.current;
-    if (!container || event.pointerType === "mouse" && event.button !== 0) {
+    const target = event.target as HTMLElement | null;
+
+    if (
+      !container ||
+      event.pointerType === "mouse" && event.button !== 0 ||
+      target?.closest("button, a, input, textarea, label")
+    ) {
       return;
     }
 

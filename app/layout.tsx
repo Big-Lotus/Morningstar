@@ -49,10 +49,10 @@ export default function RootLayout({
                     Vocabulary
                   </Link>
                   <Link
-                    href="/bookmarks"
+                    href="/investigate"
                     className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
                   >
-                    Bookmarks
+                    Investigate
                   </Link>
                   <Link
                     href="/community"

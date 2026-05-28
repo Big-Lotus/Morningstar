@@ -50,6 +50,19 @@ export type CommunityComment = {
   createdAt: string;
 };
 
+export type PollVote = {
+  id: string;
+  authorName: string;
+  optionId: string;
+  opinion: string;
+  createdAt: string;
+};
+
+export type PollOption = {
+  id: string;
+  label: string;
+};
+
 export type CommunityPost = {
   id: string;
   compositionId: string;
@@ -61,5 +74,9 @@ export type CommunityPost = {
   sourceSlugs: string[];
   sourceSnapshots: Article[];
   comments: CommunityComment[];
+  pollQuestion?: string;
+  pollOptions?: PollOption[];
+  pollVotes?: PollVote[];
+  summaryInsight?: string;
   createdAt: string;
 };

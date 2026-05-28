@@ -12,7 +12,7 @@ type ArticleCardProps = {
 };
 
 export function ArticleCard({ article }: ArticleCardProps) {
-  const { bookmarkedSlugs, toggleBookmark } = useLearningStore();
+  const { bookmarkedSlugs, currentUsername, toggleBookmark } = useLearningStore();
   const isBookmarked = bookmarkedSlugs.includes(article.slug);
   const [isPressed, setIsPressed] = useState(false);
 
@@ -32,7 +32,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             : "border-line bg-paper/95 text-clay hover:border-clay hover:text-ink"
         } ${isPressed ? "scale-[0.98]" : ""}`}
       >
-        {isBookmarked ? "Saved" : "Save"}
+        {isBookmarked ? "Unsave" : "Save"}
       </button>
 
       <div className="pr-20">
@@ -50,6 +50,16 @@ export function ArticleCard({ article }: ArticleCardProps) {
       >
         Open source article
       </Link>
+      {isBookmarked ? (
+        <Link
+          href="/investigate"
+          className="soft-ring ml-2 mt-6 inline-flex rounded-full border border-moss bg-moss px-4 py-2 text-sm text-paper transition hover:-translate-y-0.5"
+        >
+          Investigate
+        </Link>
+      ) : !currentUsername ? (
+        <p className="mt-4 text-sm text-clay">Sign in to save this story.</p>
+      ) : null}
     </article>
   );
 }

@@ -2,6 +2,7 @@
 
 import { ArticleCard } from "@/components/ArticleCard";
 import { ArticleCarousel } from "@/components/ArticleCarousel";
+import { AuthPanel } from "@/components/AuthPanel";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { HomeHero } from "@/components/HomeHero";
 import { InterestOnboarding } from "@/components/InterestOnboarding";
@@ -10,10 +11,20 @@ import { useLearningStore } from "@/providers/learning-store";
 
 export default function HomePage() {
   const {
+    currentUsername,
     hasCompletedOnboarding,
+    isHydrated,
     selectedInterests,
     resetOnboarding
   } = useLearningStore();
+
+  if (!isHydrated) {
+    return null;
+  }
+
+  if (!currentUsername) {
+    return <AuthPanel />;
+  }
 
   if (!hasCompletedOnboarding) {
     return <InterestOnboarding />;

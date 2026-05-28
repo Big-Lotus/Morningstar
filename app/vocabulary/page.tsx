@@ -1,9 +1,18 @@
 "use client";
 
+import { AuthPanel } from "@/components/AuthPanel";
 import { useLearningStore } from "@/providers/learning-store";
 
 export default function VocabularyPage() {
-  const { savedWords } = useLearningStore();
+  const { currentUsername, isHydrated, savedWords } = useLearningStore();
+
+  if (!isHydrated) {
+    return null;
+  }
+
+  if (!currentUsername) {
+    return <AuthPanel />;
+  }
 
   return (
     <main className="mx-auto max-w-[900px]">

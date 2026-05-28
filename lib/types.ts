@@ -37,7 +37,29 @@ export type SavedVocabulary = {
 export type ComposedArticle = {
   id: string;
   title: string;
-  body: string;
+  requirements: string;
+  analysis: string;
   sourceSlugs: string[];
+  createdAt: string;
+};
+
+export type CommunityComment = {
+  id: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
+};
+
+export type CommunityPost = {
+  id: string;
+  compositionId: string;
+  authorName: string;
+  title: string;
+  insight: string;
+  requirements: string;
+  analysis: string;
+  sourceSlugs: string[];
+  sourceSnapshots: Article[];
+  comments: CommunityComment[];
   createdAt: string;
 };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import "./globals.css";
+import { AuthStatus } from "@/components/AuthStatus";
 import { LearningStoreProvider } from "@/providers/learning-store";
 
 export const metadata: Metadata = {
@@ -33,26 +34,35 @@ export default function RootLayout({
                 </p>
               </div>
 
-              <nav className="flex flex-wrap gap-2">
-                <Link
-                  href="/"
-                  className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
-                >
-                  Daily Topics
-                </Link>
-                <Link
-                  href="/vocabulary"
-                  className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
-                >
-                  Vocabulary
-                </Link>
-                <Link
-                  href="/bookmarks"
-                  className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
-                >
-                  Bookmarks
-                </Link>
-              </nav>
+              <div className="flex flex-wrap items-center gap-2">
+                <nav className="flex flex-wrap gap-2">
+                  <Link
+                    href="/"
+                    className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+                  >
+                    Daily Topics
+                  </Link>
+                  <Link
+                    href="/vocabulary"
+                    className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+                  >
+                    Vocabulary
+                  </Link>
+                  <Link
+                    href="/bookmarks"
+                    className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+                  >
+                    Bookmarks
+                  </Link>
+                  <Link
+                    href="/community"
+                    className="rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+                  >
+                    Community
+                  </Link>
+                </nav>
+                <AuthStatus />
+              </div>
             </header>
             {children}
           </div>

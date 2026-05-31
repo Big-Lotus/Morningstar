@@ -113,7 +113,7 @@ export function ArticleCarousel({
   };
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-5 rounded-[2rem] border border-line/70 bg-paper/84 p-5 shadow-soft md:p-6">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.24em] text-clay">
@@ -161,11 +161,11 @@ export function ArticleCarousel({
             shouldSuppressClickRef.current = false;
           }, 0);
         }}
-        className="hide-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 pt-2 scroll-smooth md:mx-0 md:gap-5 md:px-0"
+        className="hide-scrollbar -mx-2 flex snap-x snap-mandatory gap-5 overflow-x-auto px-2 pb-4 pt-2 scroll-smooth md:mx-0 md:gap-6 md:px-0"
         style={{
           cursor: isDragging ? "grabbing" : "grab",
           WebkitOverflowScrolling: "touch",
-          scrollPaddingLeft: "1.25rem"
+          scrollPaddingLeft: "0.5rem"
         }}
       >
         {children}

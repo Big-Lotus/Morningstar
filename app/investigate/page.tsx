@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { ArticleVisual } from "@/components/ArticleVisual";
 import { AuthPanel } from "@/components/AuthPanel";
-import { articles, categoryLabels } from "@/lib/data";
+import { categoryLabels } from "@/lib/data";
 import { Article } from "@/lib/types";
 import { useLearningStore } from "@/providers/learning-store";
 
@@ -41,17 +42,23 @@ export default function InvestigatePage() {
     composedArticles,
     customArticles,
     communityPosts,
+    feedArticles,
     isHydrated,
     addCustomArticleFromUrl,
+    deleteCustomArticle,
     addComposedArticle,
+    deleteComposedArticle,
     shareComposition
   } = useLearningStore();
-  const allArticles = [...customArticles, ...articles];
-  const bookmarkedArticles = articles.filter((article) =>
+  const allArticles = [...customArticles, ...feedArticles];
+  const bookmarkedArticles = feedArticles.filter((article) =>
     bookmarkedSlugs.includes(article.slug)
   );
   const [stage, setStage] = useState<Stage>("compose");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [recommendationSeedSlug, setRecommendationSeedSlug] = useState<string | null>(
+    null
+  );
   const [resultId, setResultId] = useState<string | null>(null);
   const [customSourceUrl, setCustomSourceUrl] = useState("");
   const [customSourceError, setCustomSourceError] = useState("");
@@ -61,18 +68,30 @@ export default function InvestigatePage() {
     null
   );
   const [shareInsight, setShareInsight] = useState("");
+  const addedArticles = customArticles;
 
   useEffect(() => {
-    setSelectedSlugs((current) =>
-      current.filter((slug) => bookmarkedSlugs.includes(slug))
-    );
-  }, [bookmarkedSlugs]);
+    setSelectedSlugs((current) => {
+      const availableSourceSlugs = new Set([
+        ...bookmarkedSlugs,
+        ...customArticles.map((article) => article.slug)
+      ]);
+      const next = current.filter((slug) => availableSourceSlugs.has(slug));
+
+      return next.length === current.length &&
+        next.every((slug, index) => slug === current[index])
+        ? current
+        : next;
+    });
+  }, [bookmarkedSlugs, customArticles]);
 
   const selectedArticles = allArticles.filter((article) =>
     selectedSlugs.includes(article.slug)
   );
+  const recommendationSeedArticle =
+    allArticles.find((article) => article.slug === recommendationSeedSlug) ?? null;
   const recommendationKeywords = getRecommendationKeywords(
-    selectedArticles,
+    recommendationSeedArticle,
     requirements
   );
   const recommendedArticles = useMemo(
@@ -80,11 +99,10 @@ export default function InvestigatePage() {
       getRecommendedArticles({
         allArticles,
         bookmarkedSlugs,
-        selectedArticles,
-        selectedSlugs,
+        recommendationSeedArticle,
         keywords: recommendationKeywords
       }),
-    [allArticles, bookmarkedSlugs, recommendationKeywords, selectedArticles, selectedSlugs]
+    [allArticles, bookmarkedSlugs, recommendationKeywords, recommendationSeedArticle]
   );
   const resultArticle = composedArticles.find((entry) => entry.id === resultId);
 
@@ -113,6 +131,15 @@ export default function InvestigatePage() {
     );
     setCustomSourceUrl("");
     setCustomSourceError("");
+  };
+
+  const openRecommendStage = () => {
+    if (!title.trim() || !requirements.trim() || selectedArticles.length === 0) {
+      return;
+    }
+
+    setRecommendationSeedSlug(selectedArticles[0].slug);
+    setStage("recommend");
   };
 
   const createAnalysis = () => {
@@ -149,23 +176,54 @@ export default function InvestigatePage() {
   }
 
   return (
-    <main className="mx-auto max-w-[1040px] space-y-8">
-      <section className="rounded-[1.5rem] border border-line bg-paper/90 px-7 py-8 shadow-soft md:px-10">
-        <p className="text-sm uppercase tracking-[0.22em] text-moss">
-          Investigate
-        </p>
-        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
-          Build an analysis from the stories you saved.
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-clay">
-          Write the question first, choose the source that started your
-          curiosity, then decide whether to analyze now or collect matching
-          sources.
-        </p>
+    <main className="mx-auto w-full space-y-8">
+      <section className="grid gap-6 rounded-[2rem] border border-line bg-paper/92 p-5 shadow-soft md:grid-cols-[1.1fr_0.9fr] md:p-7">
+        <div className="rounded-[1.75rem] bg-[#fff9f1] p-6 md:p-7">
+          <p className="text-sm uppercase tracking-[0.22em] text-moss">
+            Investigate
+          </p>
+          <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
+            Build an analysis from the stories you saved.
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-clay">
+            Write the question first, choose the source that started your
+            curiosity, then decide whether to analyze now or collect matching
+            sources.
+          </p>
+        </div>
+        <div className="rounded-[1.75rem] border border-line/70 bg-[linear-gradient(140deg,rgba(232,144,92,0.88),rgba(111,69,47,0.86))] p-5">
+          <div className="flex h-full flex-col justify-between rounded-[1.4rem] border border-paper/20 bg-black/10 p-5">
+            <div className="flex justify-between gap-3 text-xs uppercase tracking-[0.18em] text-paper/80">
+              <span>Source desk</span>
+              <span>{selectedSlugs.length} selected</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[1rem] bg-paper/15 p-4 text-paper backdrop-blur-[1.5px]">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-paper/80">
+                  Request
+                </p>
+                <p className="mt-2 text-sm leading-6">
+                  Start with one story and a clear question.
+                </p>
+              </div>
+              <div className="rounded-[1rem] bg-paper/15 p-4 text-paper backdrop-blur-[1.5px]">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-paper/80">
+                  Result
+                </p>
+                <p className="mt-2 text-sm leading-6">
+                  Compare connected articles before you write.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="md:col-span-2">
+          <StageIndicator currentStage={stage} />
+        </div>
       </section>
 
       {stage === "compose" ? (
-        <section className="rounded-[1.5rem] border border-line bg-paper/95 p-6 shadow-soft md:p-8">
+        <section className="rounded-[2rem] border border-line bg-paper/95 p-6 shadow-soft md:p-8">
           <div>
             <p className="text-sm uppercase tracking-[0.22em] text-moss">
               Analysis Request
@@ -239,10 +297,22 @@ export default function InvestigatePage() {
             onToggleSelected={toggleSelected}
           />
 
+          <ArticlePicker
+            title="Added sources"
+            emptyMessage="No extra sources added yet."
+            articles={addedArticles}
+            selectedSlugs={selectedSlugs}
+            onToggleSelected={toggleSelected}
+            onDeleteArticle={(slug) => {
+              deleteCustomArticle(slug);
+              setSelectedSlugs((current) => current.filter((item) => item !== slug));
+            }}
+          />
+
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => setStage("recommend")}
+              onClick={openRecommendStage}
               disabled={!title.trim() || !requirements.trim() || selectedSlugs.length === 0}
               className="soft-ring rounded-full border border-moss bg-moss px-6 py-3 text-sm font-medium text-paper transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-clay"
             >
@@ -257,11 +327,14 @@ export default function InvestigatePage() {
               Analyze with this
             </button>
           </div>
+          <p className="mt-4 text-sm text-clay">
+            {selectedSlugs.length} source{selectedSlugs.length === 1 ? "" : "s"} selected
+          </p>
         </section>
       ) : null}
 
       {stage === "recommend" ? (
-        <section className="rounded-[1.5rem] border border-line bg-paper/95 p-6 shadow-soft md:p-8">
+        <section className="rounded-[2rem] border border-line bg-paper/95 p-6 shadow-soft md:p-8">
           <p className="text-sm uppercase tracking-[0.22em] text-moss">
             Matching Sources
           </p>
@@ -269,6 +342,10 @@ export default function InvestigatePage() {
             Choose related stories before analysis
           </h2>
           <p className="mt-3 text-sm leading-7 text-clay">
+            Based on:{" "}
+            {recommendationSeedArticle ? recommendationSeedArticle.title : "your first selected source"}
+          </p>
+          <p className="mt-1 text-sm leading-7 text-clay">
             Matching keywords:{" "}
             {recommendationKeywords.length > 0
               ? recommendationKeywords.join(", ")
@@ -300,6 +377,9 @@ export default function InvestigatePage() {
               Back to request
             </button>
           </div>
+          <p className="mt-4 text-sm text-clay">
+            {selectedSlugs.length} source{selectedSlugs.length === 1 ? "" : "s"} ready for analysis
+          </p>
         </section>
       ) : null}
 
@@ -338,22 +418,39 @@ export default function InvestigatePage() {
         {composedArticles.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             {composedArticles.map((composition) => (
-              <button
+              <article
                 key={composition.id}
-                type="button"
-                onClick={() => {
-                  setResultId(composition.id);
-                  setStage("result");
-                }}
-                className="soft-ring rounded-[1.25rem] border border-line bg-paper/95 p-5 text-left shadow-soft hover:-translate-y-0.5 hover:border-moss"
+                className="rounded-[1.25rem] border border-line bg-paper/95 p-5 shadow-soft"
               >
-                <h3 className="font-[family-name:var(--font-heading)] text-2xl font-semibold leading-tight text-ink">
-                  {composition.title}
-                </h3>
-                <p className="mt-3 line-clamp-3 text-sm leading-6 text-clay">
-                  {composition.requirements}
-                </p>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResultId(composition.id);
+                    setStage("result");
+                  }}
+                  className="block w-full text-left"
+                >
+                  <h3 className="font-[family-name:var(--font-heading)] text-2xl font-semibold leading-tight text-ink">
+                    {composition.title}
+                  </h3>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-clay">
+                    {composition.requirements}
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteComposedArticle(composition.id);
+                    if (resultId === composition.id) {
+                      setResultId(null);
+                      setStage("compose");
+                    }
+                  }}
+                  className="soft-ring mt-4 rounded-full border border-line bg-paper px-3 py-1 text-xs text-clay hover:border-[#c96438] hover:text-[#c96438]"
+                >
+                  Delete
+                </button>
+              </article>
             ))}
           </div>
         ) : (
@@ -372,6 +469,7 @@ type ArticlePickerProps = {
   articles: Article[];
   selectedSlugs: string[];
   onToggleSelected: (slug: string) => void;
+  onDeleteArticle?: (slug: string) => void;
 };
 
 function ArticlePicker({
@@ -379,7 +477,8 @@ function ArticlePicker({
   emptyMessage,
   articles: pickerArticles,
   selectedSlugs,
-  onToggleSelected
+  onToggleSelected,
+  onDeleteArticle
 }: ArticlePickerProps) {
   return (
     <section className="mt-6">
@@ -401,29 +500,49 @@ function ArticlePicker({
                     : "border-line bg-paper/90 hover:border-moss"
                 }`}
               >
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => onToggleSelected(article.slug)}
-                    className="mt-1 h-4 w-4 accent-[#e57945]"
-                    aria-label={`Select ${article.title}`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs uppercase tracking-[0.16em] text-clay">
-                      {categoryLabels[article.category]} / {article.sourceName}
-                    </p>
-                    <h4 className="mt-2 font-[family-name:var(--font-heading)] text-2xl font-semibold leading-tight text-ink">
-                      {article.title}
-                    </h4>
-                    <Link
-                      href={article.sourceUrl}
-                      className="soft-ring mt-3 inline-flex rounded-full border border-line bg-paper px-3 py-1 text-xs text-clay hover:border-moss hover:text-ink"
-                    >
-                      Open source
-                    </Link>
+                <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
+                  <ArticleVisual article={article} compact />
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => onToggleSelected(article.slug)}
+                      className="mt-1 h-4 w-4 accent-[#e57945]"
+                      aria-label={`Select ${article.title}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => onToggleSelected(article.slug)}
+                        className="block text-left"
+                      >
+                        <p className="text-xs uppercase tracking-[0.16em] text-clay">
+                          {categoryLabels[article.category]} / {article.sourceName}
+                        </p>
+                        <h4 className="mt-2 font-[family-name:var(--font-heading)] text-2xl font-semibold leading-tight text-ink">
+                          {article.title}
+                        </h4>
+                      </button>
+                      <Link
+                        href={article.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="soft-ring mt-3 inline-flex rounded-full border border-line bg-paper px-3 py-1 text-xs text-clay hover:border-moss hover:text-ink"
+                      >
+                        Open source
+                      </Link>
+                      {onDeleteArticle ? (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteArticle(article.slug)}
+                          className="soft-ring ml-2 mt-3 inline-flex rounded-full border border-line bg-paper px-3 py-1 text-xs text-clay hover:border-[#c96438] hover:text-[#c96438]"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                </label>
+                </div>
               </article>
             );
           })
@@ -434,6 +553,45 @@ function ArticlePicker({
         )}
       </div>
     </section>
+  );
+}
+
+function StageIndicator({ currentStage }: { currentStage: Stage }) {
+  const stages: Array<{ key: Stage; label: string; caption: string }> = [
+    { key: "compose", label: "1. Request", caption: "Write your question and pick sources" },
+    { key: "recommend", label: "2. Sources", caption: "Review related articles before analysis" },
+    { key: "result", label: "3. Result", caption: "Read, refine, and share your analysis" }
+  ];
+  const currentIndex = stages.findIndex((stage) => stage.key === currentStage);
+
+  return (
+    <div className="mt-6 grid gap-3 md:grid-cols-3">
+      {stages.map((stage, index) => {
+        const active = stage.key === currentStage;
+        const complete = index < currentIndex;
+
+        return (
+          <div
+            key={stage.key}
+            className={`rounded-[1.25rem] border p-4 transition ${
+              active
+                ? "border-moss bg-accent/60"
+                : complete
+                  ? "border-moss/40 bg-paper"
+                  : "border-line bg-paper/80"
+            }`}
+          >
+            <p className="text-xs uppercase tracking-[0.16em] text-clay">
+              {complete ? "Completed" : active ? "Current step" : "Upcoming"}
+            </p>
+            <h2 className="mt-2 font-[family-name:var(--font-heading)] text-2xl font-semibold text-ink">
+              {stage.label}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-clay">{stage.caption}</p>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -500,6 +658,8 @@ function AnalysisResult({
             <Link
               key={source.slug}
               href={source.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
               className="soft-ring rounded-[1.25rem] border border-line bg-accent/45 p-4 hover:border-moss hover:bg-paper"
             >
               <p className="text-xs uppercase tracking-[0.14em] text-clay">
@@ -560,12 +720,17 @@ function AnalysisResult({
   );
 }
 
-function getRecommendationKeywords(selectedArticles: Article[], requirements: string) {
+function getRecommendationKeywords(
+  seedArticle: Article | null,
+  requirements: string
+) {
+  if (!seedArticle) {
+    return [];
+  }
+
   const text = [
     requirements,
-    ...selectedArticles.map(
-      (article) => `${article.title} ${article.keyword} ${article.intro}`
-    )
+    `${seedArticle.title} ${seedArticle.keyword} ${seedArticle.intro}`
   ].join(" ");
   const counts = text
     .toLowerCase()
@@ -583,39 +748,63 @@ function getRecommendationKeywords(selectedArticles: Article[], requirements: st
     return frequentWords;
   }
 
-  return selectedArticles
-    .flatMap((article) => article.keyword.toLowerCase().split(/\s+/))
+  return seedArticle.keyword
+    .toLowerCase()
+    .split(/\s+/)
     .filter((word) => word.length >= 4 && !stopWords.has(word));
 }
 
 function getRecommendedArticles({
   allArticles,
   bookmarkedSlugs,
-  selectedArticles,
-  selectedSlugs,
+  recommendationSeedArticle,
   keywords
 }: {
   allArticles: Article[];
   bookmarkedSlugs: string[];
-  selectedArticles: Article[];
-  selectedSlugs: string[];
+  recommendationSeedArticle: Article | null;
   keywords: string[];
 }) {
-  const selectedCategories = new Set(
-    selectedArticles.map((article) => article.category)
+  if (!recommendationSeedArticle) {
+    return [];
+  }
+
+  const seedTitleWords = new Set(
+    recommendationSeedArticle.title
+      .toLowerCase()
+      .match(/[a-z]{4,}/g)
+      ?.filter((word) => !stopWords.has(word)) ?? []
   );
+
   const keywordMatches = allArticles
-    .filter((article) => !selectedSlugs.includes(article.slug))
     .map((article) => {
+      const titleText = article.title.toLowerCase();
       const haystack = `${article.title} ${article.keyword} ${article.intro}`.toLowerCase();
+      const titleWords = new Set(
+        article.title
+          .toLowerCase()
+          .match(/[a-z]{4,}/g)
+          ?.filter((word) => !stopWords.has(word)) ?? []
+      );
+      const titleKeywordMatches = keywords.filter((keyword) =>
+        titleText.includes(keyword)
+      ).length;
+      const sharedTitleWords = [...titleWords].filter((word) =>
+        seedTitleWords.has(word)
+      ).length;
       const score =
+        titleKeywordMatches * 4 +
+        sharedTitleWords * 3 +
         keywords.filter((keyword) => haystack.includes(keyword)).length +
-        (selectedCategories.has(article.category) ? 1 : 0) +
+        (article.category === recommendationSeedArticle.category ? 1 : 0) +
         (bookmarkedSlugs.includes(article.slug) ? 1 : 0);
 
       return { article, score };
     })
-    .filter((item) => item.score > 0)
+    .filter(
+      (item) =>
+        item.article.slug !== recommendationSeedArticle.slug && item.score > 0
+    )
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map((item) => item.article);

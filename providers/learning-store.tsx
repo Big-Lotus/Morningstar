@@ -10,6 +10,43 @@ import {
 } from "react";
 
 import { articles } from "@/lib/data";
+import { getArticles as getDbArticles } from "@/lib/db/articles";
+import { toggleBookmark as toggleDbBookmark } from "@/lib/db/bookmarks";
+import { isSupabaseConfigured } from "@/lib/db/client";
+import {
+  addCommunityAnalysisComment,
+  createCommunityAnalysisPost,
+  deleteCommunityAnalysisComment,
+  deleteCommunityAnalysisPost,
+  getCommunityAnalysisPosts
+} from "@/lib/db/community-analysis";
+import {
+  addCommunityPollComment,
+  createCommunityPoll as createDbCommunityPoll,
+  deleteCommunityPoll,
+  deleteCommunityPollComment,
+  getCommunityPolls,
+  updateCommunityPollSummary,
+  upsertPollVote
+} from "@/lib/db/community-polls";
+import {
+  addCustomSource,
+  deleteCustomSource,
+  getCustomSources
+} from "@/lib/db/custom-sources";
+import { replaceUserInterests } from "@/lib/db/interests";
+import {
+  createInvestigation,
+  deleteInvestigation,
+  getInvestigations,
+  InvestigationSourceInput
+} from "@/lib/db/investigations";
+import { createUser, getUserByUsername } from "@/lib/db/users";
+import {
+  addSavedVocabulary,
+  deleteSavedVocabulary,
+  getSavedVocabulary
+} from "@/lib/db/vocabulary";
 import {
   Article,
   Category,
@@ -49,10 +86,11 @@ type LearningStoreValue = {
   bookmarkedSlugs: string[];
   selectedInterests: Category[];
   hasCompletedOnboarding: boolean;
+  feedArticles: Article[];
   composedArticles: ComposedArticle[];
   customArticles: Article[];
   communityPosts: CommunityPost[];
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   setSelectedInterests: (interests: Category[]) => void;
   completeOnboarding: () => void;
@@ -62,9 +100,11 @@ type LearningStoreValue = {
   removeWord: (id: string) => void;
   toggleBookmark: (slug: string) => void;
   addCustomArticleFromUrl: (sourceUrl: string) => string | null;
+  deleteCustomArticle: (slug: string) => void;
   addComposedArticle: (
     entry: Omit<ComposedArticle, "id" | "createdAt" | "analysis">
   ) => string | null;
+  deleteComposedArticle: (compositionId: string) => void;
   shareComposition: (compositionId: string, insight: string) => void;
   createCommunityPoll: (entry: {
     title: string;
@@ -105,11 +145,25 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
   const [bookmarkedSlugs, setBookmarkedSlugs] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterestsState] = useState<Category[]>([]);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [feedArticles, setFeedArticles] = useState<Article[]>(articles);
   const [composedArticles, setComposedArticles] = useState<ComposedArticle[]>([]);
   const [customArticles, setCustomArticles] = useState<Article[]>([]);
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
 
   useEffect(() => {
+    if (isSupabaseConfigured) {
+      getDbArticles()
+        .then((dbArticles) => {
+          if (dbArticles.length > 0) {
+            setFeedArticles(dbArticles);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to load Supabase articles.", error);
+        });
+    }
+
     const raw = window.localStorage.getItem(STORAGE_KEY);
 
     if (raw) {
@@ -125,6 +179,32 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           (post) => post.title !== "good"
         )
       );
+
+      if (username && isSupabaseConfigured) {
+        setCurrentUsername(username);
+        getUserByUsername(username)
+          .then(async (user) => {
+            if (!user) {
+              setCurrentUsername(null);
+              loadUserState(emptyUserState);
+              return;
+            }
+
+            setCurrentUserId(user.id);
+            setCurrentUsername(user.username);
+            await loadRemoteUserState(user.id);
+          })
+          .catch((error) => {
+            console.error("Failed to restore Supabase session.", error);
+            setCurrentUsername(null);
+            loadUserState(emptyUserState);
+          })
+          .finally(() => {
+            setIsHydrated(true);
+          });
+        return;
+      }
+
       setCurrentUsername(account?.username ?? null);
 
       if (account) {
@@ -220,16 +300,44 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       bookmarkedSlugs,
       selectedInterests,
       hasCompletedOnboarding,
+      feedArticles,
       composedArticles,
       customArticles,
       communityPosts,
-      login: (username, password) => {
+      login: async (username, password) => {
         const normalizedUsername = username.trim();
         const normalizedPassword = password.trim();
 
         if (!normalizedUsername || !normalizedPassword) {
           setAuthError("Username and password are required.");
           return false;
+        }
+
+        if (isSupabaseConfigured) {
+          try {
+            const passwordHash = await hashPassword(normalizedPassword);
+            const existingUser = await getUserByUsername(normalizedUsername);
+
+            if (existingUser && existingUser.password_hash !== passwordHash) {
+              setAuthError("Password does not match this username.");
+              return false;
+            }
+
+            const user =
+              existingUser ??
+              (await createUser({
+                username: normalizedUsername,
+                passwordHash
+              }));
+
+            setCurrentUserId(user.id);
+            setCurrentUsername(user.username);
+            setAuthError("");
+            await loadRemoteUserState(user.id);
+            return true;
+          } catch (error) {
+            console.error("Supabase login failed. Falling back to local state.", error);
+          }
         }
 
         const key = accountKey(normalizedUsername);
@@ -253,52 +361,76 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           [key]: account
         }));
         setCurrentUsername(account.username);
+        setCurrentUserId(null);
         loadUserState(account.state);
         setAuthError("");
         return true;
       },
       logout: () => {
         setCurrentUsername(null);
+        setCurrentUserId(null);
         setAuthError("");
         loadUserState(emptyUserState);
       },
-      setSelectedInterests: setSelectedInterestsState,
+      setSelectedInterests: (interests) => {
+        setSelectedInterestsState(interests);
+        syncUserInterests(currentUserId, interests);
+      },
       completeOnboarding: () => {
         setHasCompletedOnboarding(true);
       },
       resetOnboarding: () => {
         setHasCompletedOnboarding(false);
         setSelectedInterestsState([]);
+        syncUserInterests(currentUserId, []);
       },
       saveWord: (entry) => {
         const normalizedWord = entry.word.trim();
+        const normalizedMeaning = entry.meaning.trim();
         const normalizedSentence = entry.sentence.trim();
 
-        if (!normalizedWord || !normalizedSentence || !currentUsername) {
+        if (
+          !normalizedWord ||
+          !normalizedMeaning ||
+          !normalizedSentence ||
+          !currentUsername
+        ) {
           return;
         }
 
+        const alreadySaved = savedWords.some(
+          (item) =>
+            item.word.toLowerCase() === normalizedWord.toLowerCase() &&
+            item.sentence === normalizedSentence
+        );
+
+        if (alreadySaved) {
+          return;
+        }
+
+        const savedEntry = {
+          ...entry,
+          word: normalizedWord,
+          meaning: normalizedMeaning,
+          sentence: normalizedSentence,
+          id: crypto.randomUUID()
+        };
+
         setSavedWords((current) => {
-          const alreadySaved = current.some(
-            (item) =>
-              item.word.toLowerCase() === normalizedWord.toLowerCase() &&
-              item.sentence === normalizedSentence
-          );
-
-          if (alreadySaved) {
-            return current;
-          }
-
-          return [
-            {
-              ...entry,
-              word: normalizedWord,
-              sentence: normalizedSentence,
-              id: `${entry.topicSlug}-${normalizedWord}-${current.length + 1}`
-            },
-            ...current
-          ];
+          return [savedEntry, ...current];
         });
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              addSavedVocabulary(
+                currentUserId,
+                savedEntry,
+                getSourceType(entry.sourceSlug, [...feedArticles, ...customArticles])
+              ),
+            "save vocabulary"
+          );
+        }
       },
       hasSavedWord: (word, sentence) => {
         const normalizedWord = word.trim().toLowerCase();
@@ -316,6 +448,12 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       },
       removeWord: (id) => {
         setSavedWords((current) => current.filter((item) => item.id !== id));
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () => deleteSavedVocabulary(currentUserId, id),
+            "delete vocabulary"
+          );
+        }
       },
       toggleBookmark: (slug) => {
         if (!currentUsername) {
@@ -327,6 +465,9 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             ? current.filter((item) => item !== slug)
             : [...current, slug]
         );
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(() => toggleDbBookmark(currentUserId, slug), "toggle bookmark");
+        }
       },
       addCustomArticleFromUrl: (sourceUrl) => {
         if (!currentUsername) {
@@ -339,16 +480,37 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           return null;
         }
 
-        const existingArticle = [...articles, ...customArticles].find(
+        const existingArticle = [...feedArticles, ...customArticles].find(
           (item) => item.sourceUrl === article.sourceUrl
         );
         const slug = existingArticle?.slug ?? article.slug;
 
         if (!existingArticle) {
           setCustomArticles((current) => [article, ...current]);
+          if (currentUserId && isSupabaseConfigured) {
+            runDbTask(
+              () => addCustomSource(currentUserId, article),
+              "add custom source"
+            );
+          }
         }
 
         return slug;
+      },
+      deleteCustomArticle: (slug) => {
+        if (!currentUsername) {
+          return;
+        }
+
+        setCustomArticles((current) =>
+          current.filter((article) => article.slug !== slug)
+        );
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () => deleteCustomSource(currentUserId, slug),
+            "delete custom source"
+          );
+        }
       },
       addComposedArticle: (entry) => {
         const title = entry.title.trim();
@@ -363,22 +525,65 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           return null;
         }
 
-        const id = `composition-${Date.now()}`;
+        const id = crypto.randomUUID();
+        const analysis =
+          "This prototype analysis is ready for review. The full AI pipeline will later turn the selected sources and requirements into a deeper report with evidence, comparisons, and visual summaries.";
 
         setComposedArticles((current) => [
           {
             ...entry,
             title,
             requirements,
-            analysis:
-              "This prototype analysis is ready for review. The full AI pipeline will later turn the selected sources and requirements into a deeper report with evidence, comparisons, and visual summaries.",
+            analysis,
             id,
             createdAt: new Date().toISOString()
           },
           ...current
         ]);
 
+        if (currentUserId && isSupabaseConfigured) {
+          const availableArticles = [...feedArticles, ...customArticles];
+
+          runDbTask(
+            async () => {
+              await ensureCustomSources(
+                currentUserId,
+                entry.sourceSlugs,
+                availableArticles
+              );
+
+              return createInvestigation(currentUserId, {
+                id,
+                title,
+                requirements,
+                analysis,
+                sources: toInvestigationSources(entry.sourceSlugs, availableArticles)
+              });
+            },
+            "create investigation"
+          );
+        }
+
         return id;
+      },
+      deleteComposedArticle: (compositionId) => {
+        if (!currentUsername) {
+          return;
+        }
+
+        setComposedArticles((current) =>
+          current.filter((composition) => composition.id !== compositionId)
+        );
+        setCommunityPosts((current) =>
+          current.filter((post) => post.compositionId !== compositionId)
+        );
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () => deleteInvestigation(currentUserId, compositionId),
+            "delete investigation"
+          );
+        }
       },
       shareComposition: (compositionId, insight) => {
         const normalizedInsight = insight.trim();
@@ -390,9 +595,26 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           return;
         }
 
-        const sourceSnapshots = [...customArticles, ...articles].filter(
+        const sourceSnapshots = [...customArticles, ...feedArticles].filter(
           (article) => composition.sourceSlugs.includes(article.slug)
         );
+        const existingSharedPost = communityPosts.find(
+          (post) => post.compositionId === compositionId
+        );
+        const postId = existingSharedPost?.id ?? crypto.randomUUID();
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              createCommunityAnalysisPost(currentUserId, {
+                id: postId,
+                investigationId: compositionId,
+                title: composition.title,
+                insight: normalizedInsight
+              }),
+            "share composition"
+          );
+        }
 
         setCommunityPosts((current) => {
           const existingPost = current.find(
@@ -418,7 +640,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
 
           return [
             {
-              id: `community-${Date.now()}`,
+              id: postId,
               compositionId,
               authorName: currentUsername,
               title: composition.title,
@@ -447,11 +669,16 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         }
 
         const createdAt = new Date().toISOString();
+        const pollId = crypto.randomUUID();
+        const pollOptions = options.map((option) => ({
+          id: crypto.randomUUID(),
+          label: option
+        }));
 
         setCommunityPosts((current) => [
           {
-            id: `poll-${Date.now()}`,
-            compositionId: `poll-${Date.now()}`,
+            id: pollId,
+            compositionId: pollId,
             authorName: currentUsername,
             title,
             insight: "Community poll",
@@ -461,16 +688,26 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             sourceSnapshots: [],
             comments: [],
             pollQuestion,
-            pollOptions: options.map((option, index) => ({
-              id: `option-${Date.now()}-${index}`,
-              label: option
-            })),
+            pollOptions,
             pollVotes: [],
             summaryInsight: "",
             createdAt
           },
           ...current
         ]);
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              createDbCommunityPoll(currentUserId, {
+                id: pollId,
+                title,
+                question: pollQuestion,
+                options: pollOptions
+              }),
+            "create community poll"
+          );
+        }
       },
       voteCommunityPoll: (entry) => {
         const opinion = entry.opinion.trim();
@@ -506,6 +743,18 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             };
           })
         );
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              upsertPollVote(currentUserId, {
+                pollId: entry.postId,
+                optionId: entry.optionId,
+                opinion
+              }),
+            "vote community poll"
+          );
+        }
       },
       updatePollSummaryInsight: (postId, summaryInsight) => {
         if (!currentUsername) {
@@ -514,7 +763,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
 
         setCommunityPosts((current) =>
           current.map((post) =>
-            post.id === postId && post.authorName === currentUsername
+            post.id === postId
               ? {
                   ...post,
                   summaryInsight
@@ -522,6 +771,18 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
               : post
           )
         );
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              updateCommunityPollSummary(
+                currentUserId,
+                postId,
+                summaryInsight
+              ),
+            "update poll summary"
+          );
+        }
       },
       addCommunityComment: (postId, body) => {
         const normalizedBody = body.trim();
@@ -529,6 +790,8 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         if (!normalizedBody || !currentUsername) {
           return;
         }
+
+        const commentId = crypto.randomUUID();
 
         setCommunityPosts((current) =>
           current.map((post) =>
@@ -538,7 +801,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
                   comments: [
                     ...post.comments,
                     {
-                      id: `comment-${Date.now()}`,
+                      id: commentId,
                       authorName: currentUsername,
                       body: normalizedBody,
                       createdAt: new Date().toISOString()
@@ -548,6 +811,28 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
               : post
           )
         );
+
+        const post = communityPosts.find((entry) => entry.id === postId);
+
+        if (post && currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              post.pollOptions?.length
+                ? addCommunityPollComment(
+                    currentUserId,
+                    postId,
+                    normalizedBody,
+                    commentId
+                  )
+                : addCommunityAnalysisComment(
+                    currentUserId,
+                    postId,
+                    normalizedBody,
+                    commentId
+                  ),
+            "add community comment"
+          );
+        }
       },
       deleteCommunityPost: (postId) => {
         if (!currentUsername) {
@@ -560,6 +845,18 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
               post.id !== postId || post.authorName !== currentUsername
           )
         );
+
+        const post = communityPosts.find((entry) => entry.id === postId);
+
+        if (post && currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              post.pollOptions?.length
+                ? deleteCommunityPoll(currentUserId, postId)
+                : deleteCommunityAnalysisPost(currentUserId, postId),
+            "delete community post"
+          );
+        }
       },
       deleteCommunityComment: (postId, commentId) => {
         if (!currentUsername) {
@@ -580,6 +877,18 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
               : post
           )
         );
+
+        const post = communityPosts.find((entry) => entry.id === postId);
+
+        if (post && currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              post.pollOptions?.length
+                ? deleteCommunityPollComment(currentUserId, commentId)
+                : deleteCommunityAnalysisComment(currentUserId, commentId),
+            "delete community comment"
+          );
+        }
       }
     }),
     [
@@ -589,7 +898,9 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       communityPosts,
       composedArticles,
       currentUsername,
+      currentUserId,
       customArticles,
+      feedArticles,
       hasCompletedOnboarding,
       isHydrated,
       savedWords,
@@ -612,6 +923,49 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           "AI analysis will appear here after the generation pipeline is connected."
       }))
     );
+  }
+
+  async function loadRemoteUserState(userId: string) {
+    try {
+      const [
+        { getUserInterests },
+        { getBookmarkedArticleSlugs },
+        { getCustomSources },
+        { getInvestigations }
+      ] = await Promise.all([
+        import("@/lib/db/interests"),
+        import("@/lib/db/bookmarks"),
+        import("@/lib/db/custom-sources"),
+        import("@/lib/db/investigations")
+      ]);
+      const [
+        remoteInterests,
+        remoteBookmarks,
+        remoteCustomSources,
+        remoteInvestigations,
+        remoteSavedVocabulary,
+        remoteCommunityPosts
+      ] =
+        await Promise.all([
+          getUserInterests(userId),
+          getBookmarkedArticleSlugs(userId),
+          getCustomSources(userId),
+          getInvestigations(userId),
+          getSavedVocabulary(userId),
+          loadRemoteCommunityPosts()
+        ]);
+
+      setSelectedInterestsState(remoteInterests);
+      setHasCompletedOnboarding(remoteInterests.length > 0);
+      setBookmarkedSlugs(remoteBookmarks);
+      setCustomArticles(remoteCustomSources);
+      setComposedArticles(remoteInvestigations);
+      setCommunityPosts(remoteCommunityPosts);
+      setSavedWords(remoteSavedVocabulary);
+    } catch (error) {
+      console.error("Failed to load Supabase user state.", error);
+      loadUserState(emptyUserState);
+    }
   }
 
   return (
@@ -653,8 +1007,86 @@ function normalizeCommunityPosts(
   }));
 }
 
+async function loadRemoteCommunityPosts() {
+  if (!isSupabaseConfigured) {
+    return [];
+  }
+
+  const [analysisPosts, pollPosts] = await Promise.all([
+    getCommunityAnalysisPosts(),
+    getCommunityPolls()
+  ]);
+
+  return [...analysisPosts, ...pollPosts].sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
 function accountKey(username: string) {
   return username.trim().toLowerCase();
+}
+
+async function hashPassword(password: string) {
+  const encoded = new TextEncoder().encode(password);
+  const digest = await window.crypto.subtle.digest("SHA-256", encoded);
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function syncUserInterests(userId: string | null, interests: Category[]) {
+  if (!userId || !isSupabaseConfigured) {
+    return;
+  }
+
+  runDbTask(() => replaceUserInterests(userId, interests), "sync interests");
+}
+
+function runDbTask(task: () => Promise<unknown>, label: string) {
+  task().catch((error) => {
+    console.error(`Failed to ${label}.`, error);
+  });
+}
+
+function toInvestigationSources(
+  sourceSlugs: string[],
+  availableArticles: Article[]
+): InvestigationSourceInput[] {
+  return sourceSlugs.map((slug, index) => {
+    return {
+      slug,
+      sourceType: getSourceType(slug, availableArticles),
+      sortOrder: index,
+      isSeed: index === 0
+    };
+  });
+}
+
+function getSourceType(
+  slug: string,
+  availableArticles: Article[]
+): "article" | "custom_source" {
+  const source = availableArticles.find((article) => article.slug === slug);
+
+  return source?.slug.startsWith("custom-") ? "custom_source" : "article";
+}
+
+async function ensureCustomSources(
+  userId: string,
+  sourceSlugs: string[],
+  availableArticles: Article[]
+) {
+  const customSources = availableArticles.filter(
+    (article) =>
+      sourceSlugs.includes(article.slug) &&
+      getSourceType(article.slug, availableArticles) === "custom_source"
+  );
+
+  await Promise.all(
+    customSources.map((article) => addCustomSource(userId, article))
+  );
 }
 
 function createCustomArticle(sourceUrl: string): Article | null {
@@ -672,7 +1104,7 @@ function createCustomArticle(sourceUrl: string): Article | null {
 
     return {
       slug: `custom-${slugify(`${url.hostname}-${url.pathname || "source"}`)}`,
-      category: "Global",
+      category: "National",
       title,
       sourceName: url.hostname.replace(/^www\./, ""),
       sourceUrl: url.toString(),

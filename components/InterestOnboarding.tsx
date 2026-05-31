@@ -20,7 +20,7 @@ export function InterestOnboarding() {
   };
 
   return (
-    <main className="mx-auto flex min-h-[72vh] max-w-[900px] items-center">
+    <main className="mx-auto flex min-h-[72vh] w-full max-w-[1280px] items-center">
       <section className="w-full rounded-[2rem] border border-line bg-paper/85 px-7 py-9 shadow-soft md:px-10 md:py-12">
         <p className="text-sm uppercase tracking-[0.22em] text-clay">
           Start With Your Interests

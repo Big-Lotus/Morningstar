@@ -17,9 +17,10 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 52% 0%, rgba(229, 121, 69, 0.24), transparent 28rem),
-    radial-gradient(circle at 84% 18%, rgba(255, 187, 126, 0.24), transparent 24rem),
-    linear-gradient(180deg, #f8efe0 0%, #fff6e8 58%, #f6e2cb 100%);
+    radial-gradient(circle at 50% 0%, rgba(229, 121, 69, 0.16), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgba(255, 210, 170, 0.22), transparent 24rem),
+    radial-gradient(circle at 8% 18%, rgba(255, 234, 208, 0.88), transparent 22rem),
+    linear-gradient(180deg, #fffbf4 0%, #fff7ed 62%, #f8ead8 100%);
   color: #1f1a16;
   text-rendering: optimizeLegibility;
 }

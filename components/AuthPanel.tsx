@@ -8,14 +8,17 @@ export function AuthPanel() {
   const { authError, login } = useLearningStore();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    login(username, password);
+    setIsSubmitting(true);
+    await login(username, password);
+    setIsSubmitting(false);
   };
 
   return (
-    <main className="mx-auto flex min-h-[72vh] max-w-[760px] items-center">
+    <main className="mx-auto flex min-h-[72vh] w-full max-w-[1180px] items-center">
       <section className="w-full rounded-[2rem] border border-line bg-paper/85 px-7 py-9 shadow-soft md:px-10 md:py-12">
         <p className="text-sm uppercase tracking-[0.22em] text-clay">
           Sign In
@@ -25,7 +28,7 @@ export function AuthPanel() {
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-clay">
           Use a username and password to continue. A new username creates a new
-          local account for this prototype.
+          study account, and your saved work will sync when Supabase is configured.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -58,9 +61,10 @@ export function AuthPanel() {
 
           <button
             type="submit"
-            className="soft-ring rounded-full border border-clay bg-ink px-6 py-3 text-sm font-medium text-paper transition hover:-translate-y-0.5"
+            disabled={isSubmitting}
+            className="soft-ring rounded-full border border-clay bg-ink px-6 py-3 text-sm font-medium text-paper transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-clay"
           >
-            Continue
+            {isSubmitting ? "Continuing..." : "Continue"}
           </button>
         </form>
       </section>

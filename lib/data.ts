@@ -1,118 +1,125 @@
-import { Article, Category, Topic } from "@/lib/types";
+import { Article, Category } from "@/lib/types";
 
 export const categoryLabels: Record<Category, string> = {
-  Culture: "문화",
-  Tech: "기술",
-  Economy: "경제",
-  Global: "국제",
-  Science: "과학",
-  Society: "사회"
+  National: "National",
+  Business: "Business",
+  "Life&Culture": "Life&Culture",
+  Sports: "Sports",
+  World: "World",
+  "K-pop": "K-pop"
 };
 
 export const categories: Category[] = [
-  "Culture",
-  "Tech",
-  "Economy",
-  "Global",
-  "Science",
-  "Society"
+  "National",
+  "Business",
+  "Life&Culture",
+  "Sports",
+  "World",
+  "K-pop"
+];
+
+export const koreaHeraldRssSources: Array<{
+  category: Category;
+  label: string;
+  url: string;
+}> = [
+  {
+    category: "National",
+    label: "Korea Herald National",
+    url: "https://www.koreaherald.com/rss/kh_National"
+  },
+  {
+    category: "Business",
+    label: "Korea Herald Business",
+    url: "https://www.koreaherald.com/rss/kh_Business"
+  },
+  {
+    category: "Life&Culture",
+    label: "Korea Herald Life&Culture",
+    url: "https://www.koreaherald.com/rss/kh_LifeCulture"
+  },
+  {
+    category: "Sports",
+    label: "Korea Herald Sports",
+    url: "https://www.koreaherald.com/rss/kh_Sports"
+  },
+  {
+    category: "World",
+    label: "Korea Herald World",
+    url: "https://www.koreaherald.com/rss/kh_World"
+  },
+  {
+    category: "K-pop",
+    label: "Korea Herald K-pop",
+    url: "https://www.koreaherald.com/rss/kh_Kpop"
+  }
 ];
 
 export const articles: Article[] = [
   {
-    slug: "city-libraries-create-evening-reading-clubs",
-    category: "Culture",
-    title: "City Libraries Create Evening Reading Clubs for Busy Adults",
-    sourceName: "The New York Times",
-    sourceUrl: "https://www.nytimes.com/",
-    publishedAt: "2026-04-24T09:00:00.000Z",
-    keyword: "reading ritual",
+    slug: "korea-herald-national-policy-briefing",
+    category: "National",
+    title: "National Assembly Debate Puts Youth Policy Back in Focus",
+    sourceName: "The Korea Herald",
+    sourceUrl: "https://www.koreaherald.com/",
+    publishedAt: "2026-05-29T09:00:00.000Z",
+    keyword: "youth policy",
     intro:
-      "An evening reading club trend is giving busy adults a softer way to rebuild a daily English habit through community and repetition."
+      "A Korea Herald national story gives learners a compact way to follow policy language, public debate, and the vocabulary of domestic affairs."
   },
   {
-    slug: "small-newsletters-grow-through-trust",
-    category: "Economy",
-    title: "Small Newsletters Grow Through Trust, Not Speed",
-    sourceName: "Financial Times",
-    sourceUrl: "https://www.ft.com/",
-    publishedAt: "2026-04-25T07:30:00.000Z",
-    keyword: "audience trust",
+    slug: "korea-herald-business-export-outlook",
+    category: "Business",
+    title: "Korean Exporters Watch Currency Moves Ahead of Summer Orders",
+    sourceName: "The Korea Herald",
+    sourceUrl: "https://www.koreaherald.com/",
+    publishedAt: "2026-05-29T10:20:00.000Z",
+    keyword: "export outlook",
     intro:
-      "Independent newsletters are growing by sounding more human and consistent, which makes them useful references for language learners watching tone and framing."
+      "A business item frames market pressure through practical terms around exports, currency movement, demand, and corporate planning."
   },
   {
-    slug: "education-apps-add-daily-voice-notes",
-    category: "Tech",
-    title: "Education Apps Add Daily Voice Notes to Support Reflection",
-    sourceName: "MIT Technology Review",
-    sourceUrl: "https://www.technologyreview.com/",
-    publishedAt: "2026-04-26T10:15:00.000Z",
-    keyword: "reflective learning",
+    slug: "korea-herald-life-culture-museum-night",
+    category: "Life&Culture",
+    title: "Museums Extend Evening Hours as Cultural Districts Draw Crowds",
+    sourceName: "The Korea Herald",
+    sourceUrl: "https://www.koreaherald.com/",
+    publishedAt: "2026-05-29T11:10:00.000Z",
+    keyword: "cultural district",
     intro:
-      "Education products are adding voice-based reflection, signaling a shift from speed and streaks toward slower, more expressive learning habits."
+      "A life and culture story is useful for learning descriptive language about public spaces, exhibitions, routines, and city life."
   },
   {
-    slug: "local-markets-become-weekend-meeting-spaces",
-    category: "Global",
-    title: "Local Markets Become Weekend Meeting Spaces for Young Families",
-    sourceName: "BBC",
-    sourceUrl: "https://www.bbc.com/",
-    publishedAt: "2026-04-27T06:45:00.000Z",
-    keyword: "social routine",
+    slug: "korea-herald-sports-baseball-weekend",
+    category: "Sports",
+    title: "Weekend Baseball Series Highlights New Rivalry Momentum",
+    sourceName: "The Korea Herald",
+    sourceUrl: "https://www.koreaherald.com/",
+    publishedAt: "2026-05-29T12:30:00.000Z",
+    keyword: "rivalry momentum",
     intro:
-      "Local markets are being described as social anchors again, offering a concrete example of how ordinary places shape routines, belonging, and public language."
+      "A sports article helps learners read action-oriented reporting, short quotes, rankings, performance, and fan reactions."
   },
   {
-    slug: "researchers-map-ocean-heat-changes",
-    category: "Science",
-    title: "Researchers Map Ocean Heat Changes With New Climate Models",
-    sourceName: "Nature",
-    sourceUrl: "https://www.nature.com/",
-    publishedAt: "2026-04-28T08:10:00.000Z",
-    keyword: "climate model",
+    slug: "korea-herald-world-summit-talks",
+    category: "World",
+    title: "Regional Summit Talks Turn to Trade Routes and Security",
+    sourceName: "The Korea Herald",
+    sourceUrl: "https://www.koreaherald.com/",
+    publishedAt: "2026-05-29T13:45:00.000Z",
+    keyword: "regional summit",
     intro:
-      "A new climate modeling effort gives learners a useful doorway into words about evidence, uncertainty, and long-term environmental change."
+      "A world news card introduces diplomatic vocabulary around negotiations, alliances, trade routes, and regional security."
   },
   {
-    slug: "schools-test-phone-free-morning-routines",
-    category: "Society",
-    title: "Schools Test Phone-Free Morning Routines to Improve Focus",
-    sourceName: "NPR",
-    sourceUrl: "https://www.npr.org/",
-    publishedAt: "2026-04-29T11:20:00.000Z",
-    keyword: "attention habit",
+    slug: "korea-herald-kpop-tour-record",
+    category: "K-pop",
+    title: "K-pop Group Adds Encore Dates After Global Tour Sellout",
+    sourceName: "The Korea Herald",
+    sourceUrl: "https://www.koreaherald.com/",
+    publishedAt: "2026-05-29T14:40:00.000Z",
+    keyword: "global tour",
     intro:
-      "School routines around phone use are becoming a public discussion about focus, boundaries, and how young people begin the day."
-  }
-];
-
-export const topics: Topic[] = [
-  {
-    id: "topic-quiet-habits",
-    slug: "quiet-habits-that-help-learning-last",
-    title: "Quiet habits that make learning easier to return to",
-    overview:
-      "This topic looks at how steady routines, calmer interfaces, and repeatable social rituals help people stay with a learning habit longer than pressure-based systems do.",
-    relatedKeywords: ["habit", "routine", "reflection", "consistency"],
-    articleSlugs: [
-      "city-libraries-create-evening-reading-clubs",
-      "education-apps-add-daily-voice-notes",
-      "local-markets-become-weekend-meeting-spaces"
-    ],
-    createdAt: "2026-04-28T00:00:00.000Z"
-  },
-  {
-    id: "topic-trust-and-tone",
-    slug: "how-trust-and-tone-shape-modern-reading",
-    title: "How trust and tone shape modern reading",
-    overview:
-      "This topic follows the idea that readers stay engaged when information feels credible, measured, and human, which makes tone an important part of learning through news.",
-    relatedKeywords: ["trust", "tone", "credibility", "audience"],
-    articleSlugs: [
-      "small-newsletters-grow-through-trust",
-      "city-libraries-create-evening-reading-clubs"
-    ],
-    createdAt: "2026-04-28T00:00:00.000Z"
+      "A K-pop story gives learners accessible entertainment language around fandom, tours, agencies, charts, and global audiences."
   }
 ];

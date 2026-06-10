@@ -1,5 +1,15 @@
 create extension if not exists pgcrypto;
 
+create table if not exists public.articles (
+  creator text,
+  title text not null,
+  link text not null unique,
+  pubdate timestamptz,
+  author text,
+  contentsnippet text,
+  categories jsonb not null default '[]'::jsonb
+);
+
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
   username text not null unique,
@@ -13,23 +23,6 @@ create table if not exists public.user_interests (
   category text not null,
   created_at timestamptz not null default now(),
   unique (user_id, category)
-);
-
-create table if not exists public.articles (
-  id uuid primary key default gen_random_uuid(),
-  external_id text unique,
-  slug text not null unique,
-  title text not null,
-  source_name text not null,
-  source_url text not null unique,
-  category text not null,
-  published_at timestamptz,
-  keyword text,
-  intro text not null,
-  language text not null default 'en',
-  status text not null default 'published' check (status in ('published', 'hidden', 'archived')),
-  fetched_at timestamptz,
-  created_at timestamptz not null default now()
 );
 
 create table if not exists public.custom_sources (
@@ -50,7 +43,7 @@ create table if not exists public.custom_sources (
 create table if not exists public.bookmarks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
-  article_id uuid not null references public.articles(id) on delete cascade,
+  article_id uuid not null,
   created_at timestamptz not null default now(),
   unique (user_id, article_id)
 );

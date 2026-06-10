@@ -1,99 +1,64 @@
 insert into public.articles
-  (external_id, slug, title, source_name, source_url, category, published_at, keyword, intro, language, status, fetched_at)
+  (creator, title, link, pubdate, author, contentsnippet, categories)
 values
   (
-    'seed-kh-national-20260529-001',
-    'korea-herald-national-policy-briefing',
+    'The Korea Herald',
     'National Assembly Debate Puts Youth Policy Back in Focus',
-    'The Korea Herald',
-    'https://www.koreaherald.com/view.php?ud=20260529000000',
-    'National',
+    'https://www.koreaherald.com/article/10766000',
     '2026-05-29T09:00:00.000Z',
-    'youth policy',
+    'The Korea Herald',
     'A Korea Herald national story gives learners a compact way to follow policy language, public debate, and the vocabulary of domestic affairs.',
-    'en',
-    'published',
-    now()
+    '["National"]'::jsonb
   ),
   (
-    'seed-kh-business-20260529-001',
-    'korea-herald-business-export-outlook',
+    'The Korea Herald',
     'Korean Exporters Watch Currency Moves Ahead of Summer Orders',
-    'The Korea Herald',
-    'https://www.koreaherald.com/view.php?ud=20260529000001',
-    'Business',
+    'https://www.koreaherald.com/article/10766001',
     '2026-05-29T10:20:00.000Z',
-    'export outlook',
+    'The Korea Herald',
     'A business item frames market pressure through practical terms around exports, currency movement, demand, and corporate planning.',
-    'en',
-    'published',
-    now()
+    '["Business"]'::jsonb
   ),
   (
-    'seed-kh-life-culture-20260529-001',
-    'korea-herald-life-culture-museum-night',
+    'The Korea Herald',
     'Museums Extend Evening Hours as Cultural Districts Draw Crowds',
-    'The Korea Herald',
-    'https://www.koreaherald.com/view.php?ud=20260529000002',
-    'Life&Culture',
+    'https://www.koreaherald.com/article/10766002',
     '2026-05-29T11:10:00.000Z',
-    'cultural district',
+    'The Korea Herald',
     'A life and culture story is useful for learning descriptive language about public spaces, exhibitions, routines, and city life.',
-    'en',
-    'published',
-    now()
+    '["Life&Culture"]'::jsonb
   ),
   (
-    'seed-kh-sports-20260529-001',
-    'korea-herald-sports-baseball-weekend',
+    'The Korea Herald',
     'Weekend Baseball Series Highlights New Rivalry Momentum',
-    'The Korea Herald',
-    'https://www.koreaherald.com/view.php?ud=20260529000003',
-    'Sports',
+    'https://www.koreaherald.com/article/10766003',
     '2026-05-29T12:30:00.000Z',
-    'rivalry momentum',
+    'The Korea Herald',
     'A sports article helps learners read action-oriented reporting, short quotes, rankings, performance, and fan reactions.',
-    'en',
-    'published',
-    now()
+    '["Sports"]'::jsonb
   ),
   (
-    'seed-kh-world-20260529-001',
-    'korea-herald-world-summit-talks',
+    'The Korea Herald',
     'Regional Summit Talks Turn to Trade Routes and Security',
-    'The Korea Herald',
-    'https://www.koreaherald.com/view.php?ud=20260529000004',
-    'World',
+    'https://www.koreaherald.com/article/10766004',
     '2026-05-29T13:45:00.000Z',
-    'regional summit',
+    'The Korea Herald',
     'A world news card introduces diplomatic vocabulary around negotiations, alliances, trade routes, and regional security.',
-    'en',
-    'published',
-    now()
+    '["World"]'::jsonb
   ),
   (
-    'seed-kh-kpop-20260529-001',
-    'korea-herald-kpop-tour-record',
-    'K-pop Group Adds Encore Dates After Global Tour Sellout',
     'The Korea Herald',
-    'https://www.koreaherald.com/view.php?ud=20260529000005',
-    'K-pop',
+    'K-pop Group Adds Encore Dates After Global Tour Sellout',
+    'https://www.koreaherald.com/article/10766005',
     '2026-05-29T14:40:00.000Z',
-    'global tour',
+    'The Korea Herald',
     'A K-pop story gives learners accessible entertainment language around fandom, tours, agencies, charts, and global audiences.',
-    'en',
-    'published',
-    now()
+    '["K-pop"]'::jsonb
   )
-on conflict (slug) do update set
-  external_id = excluded.external_id,
+on conflict (link) do update set
+  creator = excluded.creator,
   title = excluded.title,
-  source_name = excluded.source_name,
-  source_url = excluded.source_url,
-  category = excluded.category,
-  published_at = excluded.published_at,
-  keyword = excluded.keyword,
-  intro = excluded.intro,
-  language = excluded.language,
-  status = excluded.status,
-  fetched_at = excluded.fetched_at;
+  pubdate = excluded.pubdate,
+  author = excluded.author,
+  contentsnippet = excluded.contentsnippet,
+  categories = excluded.categories;

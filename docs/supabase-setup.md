@@ -6,8 +6,9 @@ This app can run with local fallback data, but these steps make it behave like a
 
 1. Create a new Supabase project.
 2. Open the SQL editor.
-3. Run `supabase/schema.sql`.
-4. Run `supabase/seed.sql`.
+3. Run `supabase/apply_rss_article_schema.sql` if you want to reset `articles`
+   to the minimal RSS-only shape.
+4. Or run `supabase/schema.sql` followed by `supabase/seed.sql` on a new project.
 
 If you already created the database before the custom source constraint update,
 also run `supabase/migrations/20260530_custom_sources_user_scoped.sql`.

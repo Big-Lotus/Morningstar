@@ -7,8 +7,7 @@ export async function getArticles() {
   const { data, error } = await db
     .from("articles")
     .select("*")
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
+    .order("pubDate", { ascending: false });
 
   if (error) {
     throw error;
@@ -18,40 +17,17 @@ export async function getArticles() {
 }
 
 export async function getArticlesByCategories(categories: Category[]) {
-  const db = requireSupabase();
-  let query = db
-    .from("articles")
-    .select("*")
-    .eq("status", "published")
-    .order("published_at", {
-      ascending: false
-    });
+  const articles = await getArticles();
 
-  if (categories.length > 0) {
-    query = query.in("category", categories);
+  if (categories.length === 0) {
+    return articles;
   }
 
-  const { data, error } = await query;
-
-  if (error) {
-    throw error;
-  }
-
-  return ((data ?? []) as ArticleRow[]).map(mapArticleRow);
+  return articles.filter((article) => categories.includes(article.category));
 }
 
 export async function getArticleBySlug(slug: string) {
-  const db = requireSupabase();
-  const { data, error } = await db
-    .from("articles")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  const articles = await getArticles();
 
-  if (error) {
-    throw error;
-  }
-
-  return data ? mapArticleRow(data as ArticleRow) : null;
+  return articles.find((article) => article.slug === slug) ?? null;
 }

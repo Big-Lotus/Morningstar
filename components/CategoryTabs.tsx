@@ -28,10 +28,10 @@ export function CategoryTabs({
             type="button"
             onClick={() => onSelectCategory(category)}
             className={clsx(
-              "soft-ring rounded-full border px-4 py-2 text-sm transition-all",
+              "soft-ring rounded-full border border-transparent px-4 py-2 text-sm transition-all",
               active
-                ? "border-moss bg-accent text-ink shadow-soft"
-                : "border-line bg-paper/80 text-clay hover:border-moss hover:bg-paper"
+                ? "bg-ink text-paper shadow-soft"
+                : "bg-transparent text-clay hover:bg-accent hover:text-ink"
             )}
           >
             {label}

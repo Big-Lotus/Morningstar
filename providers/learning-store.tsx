@@ -12,7 +12,7 @@ import {
 import { articles } from "@/lib/data";
 import { getArticles as getDbArticles } from "@/lib/db/articles";
 import { toggleBookmark as toggleDbBookmark } from "@/lib/db/bookmarks";
-import { isSupabaseConfigured } from "@/lib/db/client";
+import { isSupabaseConfigured, supabase } from "@/lib/db/client";
 import {
   addCommunityAnalysisComment,
   createCommunityAnalysisPost,
@@ -134,6 +134,13 @@ const emptyUserState: UserScopedState = {
   customArticles: []
 };
 
+type SupabaseErrorLike = {
+  message?: unknown;
+  code?: unknown;
+  details?: unknown;
+  hint?: unknown;
+};
+
 const LearningStoreContext = createContext<LearningStoreValue | null>(null);
 
 export function LearningStoreProvider({ children }: PropsWithChildren) {
@@ -152,18 +159,49 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
 
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      getDbArticles()
-        .then((dbArticles) => {
-          if (dbArticles.length > 0) {
-            setFeedArticles(dbArticles);
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to load Supabase articles.", error);
-        });
+    if (!isSupabaseConfigured) {
+      return;
     }
 
+    let isCancelled = false;
+
+    async function loadArticles() {
+      try {
+        const dbArticles = await getDbArticles();
+
+        if (!isCancelled) {
+          setFeedArticles(dbArticles);
+        }
+      } catch (error) {
+        reportRecoverableError("Failed to load Supabase articles.", error);
+      }
+    }
+
+    void loadArticles();
+
+    const refreshInterval = window.setInterval(loadArticles, 30_000);
+    const channel = supabase
+      ?.channel("articles-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "articles" },
+        () => {
+          void loadArticles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(refreshInterval);
+
+      if (channel) {
+        void supabase?.removeChannel(channel);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
 
     if (raw) {
@@ -195,7 +233,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             await loadRemoteUserState(user.id);
           })
           .catch((error) => {
-            console.error("Failed to restore Supabase session.", error);
+            reportRecoverableError("Failed to restore Supabase session.", error);
             setCurrentUsername(null);
             loadUserState(emptyUserState);
           })
@@ -336,7 +374,10 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             await loadRemoteUserState(user.id);
             return true;
           } catch (error) {
-            console.error("Supabase login failed. Falling back to local state.", error);
+            reportRecoverableError(
+              "Supabase login failed. Falling back to local state.",
+              error
+            );
           }
         }
 
@@ -963,7 +1004,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       setCommunityPosts(remoteCommunityPosts);
       setSavedWords(remoteSavedVocabulary);
     } catch (error) {
-      console.error("Failed to load Supabase user state.", error);
+      reportRecoverableError("Failed to load Supabase user state.", error);
       loadUserState(emptyUserState);
     }
   }
@@ -1046,8 +1087,40 @@ function syncUserInterests(userId: string | null, interests: Category[]) {
 
 function runDbTask(task: () => Promise<unknown>, label: string) {
   task().catch((error) => {
-    console.error(`Failed to ${label}.`, error);
+    reportRecoverableError(`Failed to ${label}.`, error);
   });
+}
+
+function reportRecoverableError(message: string, error: unknown) {
+  console.warn(message, normalizeErrorForLog(error));
+}
+
+function normalizeErrorForLog(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message
+    };
+  }
+
+  if (isSupabaseErrorLike(error)) {
+    return {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    };
+  }
+
+  return error;
+}
+
+function isSupabaseErrorLike(error: unknown): error is SupabaseErrorLike {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      ("message" in error || "code" in error || "details" in error || "hint" in error)
+  );
 }
 
 function toInvestigationSources(

@@ -40,7 +40,6 @@ visible and let the other sections show empty states.
 | `title` | Article title from RSS |
 | `link` | Original article URL |
 | `pubDate` | RSS publish date |
-| `author` | RSS `author` |
 | `contentSnippet` | RSS `contentSnippet` |
 | `categories` | RSS `categories` array |
 
@@ -52,7 +51,6 @@ Start with one RSS feed, preferably `National`. For each item:
 2. Map RSS `title` to `title`.
 3. Map RSS `link` to `link`.
 4. Map RSS `pubDate` or `isoDate` to `pubDate`.
-5. Map RSS `author` to `author`.
-6. Map RSS `contentSnippet` to `contentSnippet`.
-7. Map RSS `categories` to `categories`.
-8. Upsert into Supabase by `link`.
+5. Map RSS `contentSnippet` to `contentSnippet`.
+6. Map RSS `categories` to `categories`.
+7. Upsert into Supabase by `link`.

@@ -191,10 +191,13 @@ async function getSourceSlug(
   sourceType: "article" | "custom_source",
   sourceId: string
 ) {
+  if (sourceType === "article") {
+    return sourceId;
+  }
+
   const db = requireSupabase();
-  const table = sourceType === "article" ? "articles" : "custom_sources";
   const { data, error } = await db
-    .from(table)
+    .from("custom_sources")
     .select("slug")
     .eq("id", sourceId)
     .single();

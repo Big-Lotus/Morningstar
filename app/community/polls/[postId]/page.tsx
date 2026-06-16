@@ -95,18 +95,18 @@ export default function PollRoomPage() {
 
   return (
     <main className="mx-auto w-full space-y-6">
-      <section className="grid gap-5 border-b border-line/80 pb-6 xl:grid-cols-[1.3fr_0.7fr]">
+      <section className="grid gap-5 rounded-[1.75rem] border border-line bg-paper/90 p-5 shadow-soft xl:grid-cols-[1.3fr_0.7fr]">
         <div>
           <Link
             href="/community"
-            className="soft-ring inline-flex rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
+            className="soft-ring inline-flex rounded-full border border-line bg-white px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
           >
             Back to Community
           </Link>
-          <p className="mt-5 text-sm uppercase tracking-[0.22em] text-moss">
-            Issue Room {"\uD83D\uDD25"}
+          <p className="mt-5 text-sm font-medium text-moss">
+            Issue room
           </p>
-          <h1 className="mt-3 font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-7xl">
+          <h1 className="mt-3 font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight tracking-[-0.06em] text-ink md:text-7xl">
             {post.title}
           </h1>
           <p className="mt-4 max-w-5xl whitespace-pre-line text-lg leading-8 text-clay">
@@ -114,16 +114,16 @@ export default function PollRoomPage() {
           </p>
         </div>
 
-        <aside className="rounded-[1.35rem] border border-moss/30 bg-[linear-gradient(135deg,#fff7ed,#f7ddc6)] p-5 shadow-soft">
-          <p className="text-xs uppercase tracking-[0.18em] text-clay">
+        <aside className="rounded-[1.35rem] border border-moss/30 bg-accent p-5 shadow-soft">
+          <p className="text-xs font-medium text-clay">
             Shared by
           </p>
-          <p className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink">
+          <p className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold tracking-[-0.05em] text-ink">
             {post.authorName}
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <div className="rounded-[1rem] bg-paper/80 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-clay">
+              <p className="text-xs font-medium text-clay">
                 Votes
               </p>
               <p className="mt-2 font-[family-name:var(--font-heading)] text-4xl text-ink">
@@ -131,7 +131,7 @@ export default function PollRoomPage() {
               </p>
             </div>
             <div className="rounded-[1rem] bg-paper/80 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-clay">
+              <p className="text-xs font-medium text-clay">
                 Comments
               </p>
               <p className="mt-2 font-[family-name:var(--font-heading)] text-4xl text-ink">
@@ -143,7 +143,7 @@ export default function PollRoomPage() {
             <button
               type="button"
               onClick={() => deleteCommunityPost(post.id)}
-              className="soft-ring mt-5 rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
+              className="soft-ring mt-5 rounded-full border border-line bg-white px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
             >
               Delete room
             </button>
@@ -229,7 +229,7 @@ export default function PollRoomPage() {
                         optionId: option.id
                       }))
                     }
-                    className="accent-[#e57945]"
+                    className="accent-[#5bbeb2]"
                   />
                   {option.label}
                 </label>

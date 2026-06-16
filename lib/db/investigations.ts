@@ -13,13 +13,17 @@ async function getSourceId(
   sourceType: "article" | "custom_source",
   slug: string
 ) {
+  if (sourceType === "article") {
+    return slug;
+  }
+
   const db = requireSupabase();
-  const table = sourceType === "article" ? "articles" : "custom_sources";
-  const query = db.from(table).select("id").eq("slug", slug);
-  const { data, error } =
-    sourceType === "custom_source"
-      ? await query.eq("user_id", userId).single()
-      : await query.single();
+  const { data, error } = await db
+    .from("custom_sources")
+    .select("id")
+    .eq("slug", slug)
+    .eq("user_id", userId)
+    .single();
 
   if (error) {
     throw error;
@@ -157,10 +161,13 @@ async function getSourceSlug(
   sourceType: "article" | "custom_source",
   sourceId: string
 ) {
+  if (sourceType === "article") {
+    return sourceId;
+  }
+
   const db = requireSupabase();
-  const table = sourceType === "article" ? "articles" : "custom_sources";
   const { data, error } = await db
-    .from(table)
+    .from("custom_sources")
     .select("slug")
     .eq("id", sourceId)
     .single();

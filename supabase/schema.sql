@@ -4,9 +4,8 @@ create table if not exists public.articles (
   creator text,
   title text not null,
   link text not null unique,
-  pubdate timestamptz,
-  author text,
-  contentsnippet text,
+  "pubDate" timestamptz,
+  "contentSnippet" text,
   categories jsonb not null default '[]'::jsonb
 );
 
@@ -52,7 +51,7 @@ create table if not exists public.saved_vocabulary (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   source_type text not null check (source_type in ('article', 'custom_source')),
-  source_id uuid not null,
+  source_id text not null,
   word text not null,
   meaning text not null default '',
   sentence text not null,
@@ -74,7 +73,7 @@ create table if not exists public.investigation_sources (
   id uuid primary key default gen_random_uuid(),
   investigation_id uuid not null references public.investigations(id) on delete cascade,
   source_type text not null check (source_type in ('article', 'custom_source')),
-  source_id uuid not null,
+  source_id text not null,
   sort_order integer not null default 0,
   is_seed boolean not null default false,
   created_at timestamptz not null default now(),

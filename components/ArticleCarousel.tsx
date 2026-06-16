@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 
 type CarouselProps = {
   children: React.ReactNode;
-  eyebrow?: string;
-  title: string;
+  eyebrow?: React.ReactNode;
+  title: React.ReactNode;
 };
 
 export function ArticleCarousel({
@@ -113,13 +113,13 @@ export function ArticleCarousel({
   };
 
   return (
-    <section className="space-y-5 rounded-[2rem] border border-line/70 bg-paper/84 p-5 shadow-soft md:p-6">
+    <section className="space-y-4">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-clay">
+          <p className="text-sm font-medium text-moss">
             {eyebrow}
           </p>
-          <h2 className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink md:text-4xl">
+          <h2 className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold tracking-[-0.05em] text-white md:text-5xl">
             {title}
           </h2>
         </div>
@@ -128,7 +128,7 @@ export function ArticleCarousel({
           <button
             type="button"
             onClick={() => scrollByCard("left")}
-            className="soft-ring rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:-translate-y-0.5 hover:border-clay hover:bg-paper hover:text-ink"
+            className="soft-ring rounded-full border border-transparent bg-transparent px-4 py-2 text-sm text-white/68 transition hover:-translate-y-0.5 hover:bg-white/10 hover:text-white"
             aria-label="Scroll articles left"
           >
             Prev
@@ -136,7 +136,7 @@ export function ArticleCarousel({
           <button
             type="button"
             onClick={() => scrollByCard("right")}
-            className="soft-ring rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:-translate-y-0.5 hover:border-clay hover:bg-paper hover:text-ink"
+            className="soft-ring rounded-full border border-transparent bg-transparent px-4 py-2 text-sm text-white/68 transition hover:-translate-y-0.5 hover:bg-white/10 hover:text-white"
             aria-label="Scroll articles right"
           >
             Next
@@ -144,31 +144,33 @@ export function ArticleCarousel({
         </div>
       </div>
 
-      <div
-        ref={containerRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={(event) => finishDrag(event.pointerId)}
-        onPointerCancel={(event) => finishDrag(event.pointerId)}
-        onClickCapture={(event) => {
-          if (!shouldSuppressClickRef.current) {
-            return;
-          }
+      <div className="rounded-[1.75rem] border border-line/80 bg-paper/70 p-4 shadow-soft backdrop-blur md:p-6">
+        <div
+          ref={containerRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={(event) => finishDrag(event.pointerId)}
+          onPointerCancel={(event) => finishDrag(event.pointerId)}
+          onClickCapture={(event) => {
+            if (!shouldSuppressClickRef.current) {
+              return;
+            }
 
-          event.preventDefault();
-          event.stopPropagation();
-          window.setTimeout(() => {
-            shouldSuppressClickRef.current = false;
-          }, 0);
-        }}
-        className="hide-scrollbar -mx-2 flex snap-x snap-mandatory gap-5 overflow-x-auto px-2 pb-4 pt-2 scroll-smooth md:mx-0 md:gap-6 md:px-0"
-        style={{
-          cursor: isDragging ? "grabbing" : "grab",
-          WebkitOverflowScrolling: "touch",
-          scrollPaddingLeft: "0.5rem"
-        }}
-      >
-        {children}
+            event.preventDefault();
+            event.stopPropagation();
+            window.setTimeout(() => {
+              shouldSuppressClickRef.current = false;
+            }, 0);
+          }}
+          className="hide-scrollbar -mx-2 flex snap-x snap-mandatory gap-4 overflow-x-auto px-2 pb-4 pt-2 scroll-smooth md:mx-0 md:gap-5 md:px-0"
+          style={{
+            cursor: isDragging ? "grabbing" : "grab",
+            WebkitOverflowScrolling: "touch",
+            scrollPaddingLeft: "0.5rem"
+          }}
+        >
+          {children}
+        </div>
       </div>
     </section>
   );

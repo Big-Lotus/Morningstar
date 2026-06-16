@@ -14,7 +14,7 @@ export function AppNavigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-wrap gap-2">
+    <nav className="flex flex-wrap items-center gap-1 md:gap-2">
       {navItems.map((item) => {
         const active =
           item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
@@ -24,10 +24,10 @@ export function AppNavigation() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`rounded-full border px-4 py-2 text-sm transition ${
+            className={`rounded-full border border-transparent px-4 py-2 text-sm transition ${
               active
-                ? "border-moss bg-[#f7e2cf] text-ink shadow-soft"
-                : "border-line bg-paper/92 text-clay hover:border-clay hover:text-ink"
+                ? "bg-white/12 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]"
+                : "bg-transparent text-white hover:bg-white/10 hover:text-white"
             }`}
           >
             {item.label}

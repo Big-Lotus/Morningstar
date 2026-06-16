@@ -18,7 +18,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
   const [isPressed, setIsPressed] = useState(false);
 
   return (
-    <article className="group relative flex h-full min-w-[300px] snap-start flex-col rounded-[2.2rem] border border-line bg-paper/95 p-4 shadow-card soft-ring transition duration-300 hover:-translate-y-1 hover:border-clay hover:shadow-[0_24px_48px_rgba(83,63,47,0.12)] md:min-w-[360px] md:p-5">
+    <article className="group relative flex h-full min-w-[250px] snap-start flex-col overflow-hidden rounded-[1.2rem] border border-line bg-paper p-3 shadow-card soft-ring transition duration-300 hover:-translate-y-1 hover:border-moss sm:min-w-[290px] md:min-w-[330px] md:p-4">
       <button
         type="button"
         onClick={() => {
@@ -27,10 +27,10 @@ export function ArticleCard({ article }: ArticleCardProps) {
           window.setTimeout(() => setIsPressed(false), 220);
         }}
         aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-        className={`soft-ring absolute right-7 top-7 z-10 rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] ${
+        className={`soft-ring absolute right-6 top-6 z-10 rounded-full border border-transparent px-3 py-1 text-xs font-medium backdrop-blur ${
           isBookmarked
-            ? "border-moss/40 bg-moss/10 text-moss"
-            : "border-line bg-paper/95 text-clay hover:border-clay hover:text-ink"
+            ? "bg-moss/14 text-moss"
+            : "bg-paper/70 text-clay hover:bg-accent hover:text-ink"
         } ${isPressed ? "scale-[0.98]" : ""}`}
       >
         {isBookmarked ? "Unsave" : "Save"}
@@ -39,10 +39,10 @@ export function ArticleCard({ article }: ArticleCardProps) {
       <ArticleVisual article={article} />
 
       <div className="mt-5 flex flex-1 flex-col">
-        <p className="text-xs uppercase tracking-[0.18em] text-clay">
+        <p className="text-xs font-medium text-clay">
           {categoryLabels[article.category]} / {article.sourceName}
         </p>
-        <h3 className="mt-3 font-[family-name:var(--font-heading)] text-[2rem] font-semibold leading-tight text-ink transition-colors duration-300 group-hover:text-moss">
+        <h3 className="mt-3 font-[family-name:var(--font-heading)] text-[1.65rem] font-semibold leading-tight tracking-[-0.04em] text-ink transition-colors duration-300 group-hover:text-moss">
           {article.title}
         </h3>
         <p className="mt-3 line-clamp-3 text-sm leading-7 text-clay">
@@ -55,14 +55,14 @@ export function ArticleCard({ article }: ArticleCardProps) {
           href={article.sourceUrl}
           target="_blank"
           rel="noreferrer"
-          className="soft-ring inline-flex rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+          className="soft-ring inline-flex rounded-full border border-transparent bg-transparent px-4 py-2 text-sm text-clay transition hover:bg-accent hover:text-ink"
         >
           Open source article
         </Link>
         {isBookmarked ? (
           <Link
             href="/investigate"
-            className="soft-ring inline-flex rounded-full border border-moss bg-moss px-4 py-2 text-sm text-paper transition hover:-translate-y-0.5"
+            className="soft-ring inline-flex rounded-full border border-transparent bg-ink px-4 py-2 text-sm text-paper transition hover:-translate-y-0.5 hover:bg-moss"
           >
             Investigate
           </Link>

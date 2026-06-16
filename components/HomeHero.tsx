@@ -1,87 +1,105 @@
-export function HomeHero() {
-  return (
-    <section className="grid gap-6 rounded-[2.4rem] border border-line/80 bg-paper/88 p-5 shadow-soft md:grid-cols-[1.08fr_0.92fr] md:p-7">
-      <div className="rounded-[2rem] bg-[#fff8ef] p-6 md:p-8">
-        <p className="text-sm uppercase tracking-[0.22em] text-clay">
-          Today&apos;s News Space
-        </p>
-        <h1 className="mt-3 max-w-2xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
-          Collect the stories you care about, then write from them.
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-clay">
-          Start with interest-based headlines, save the pieces that feel related,
-          and turn those saved articles into your own English writing.
-        </p>
+import Link from "next/link";
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-[1.6rem] border border-line bg-paper px-4 py-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-clay">Collect</p>
-            <p className="mt-3 font-[family-name:var(--font-heading)] text-3xl text-ink">
-              Save
-            </p>
-            <p className="mt-2 text-sm leading-6 text-clay">
-              Keep only the stories that really match your curiosity.
-            </p>
-          </div>
-          <div className="rounded-[1.6rem] border border-line bg-paper px-4 py-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-clay">Connect</p>
-            <p className="mt-3 font-[family-name:var(--font-heading)] text-3xl text-ink">
-              Match
-            </p>
-            <p className="mt-2 text-sm leading-6 text-clay">
-              Pull in more related sources before you begin writing.
-            </p>
-          </div>
-          <div className="rounded-[1.6rem] border border-line bg-paper px-4 py-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-clay">Reflect</p>
-            <p className="mt-3 font-[family-name:var(--font-heading)] text-3xl text-ink">
-              Share
-            </p>
-            <p className="mt-2 text-sm leading-6 text-clay">
-              Turn collected news into analysis and community insight.
-            </p>
+import { N8nTriggerButton } from "@/components/N8nTriggerButton";
+
+type HomeHeroProps = {
+  userId: string;
+};
+
+const splineUrl =
+  "https://my.spline.design/cutecomputerfollowcursor-nOkpDVcYzEvvSrloO9SbWENR/";
+
+const pageCards = [
+  {
+    href: "/",
+    title: "Daily News",
+    text: "Collected stories appear as cards below the monitor.",
+    seed: "morningstar-news-wall"
+  },
+  {
+    href: "/vocabulary",
+    title: "Vocab",
+    text: "Save words with examples and source context.",
+    seed: "mint-notebook-desk"
+  },
+  {
+    href: "/investigate",
+    title: "Investigate",
+    text: "Turn saved sources into a focused analysis.",
+    seed: "analysis-monitor-room"
+  },
+  {
+    href: "/community",
+    title: "Community",
+    text: "Share investigations and open issue rooms.",
+    seed: "soft-community-board"
+  }
+];
+
+export function HomeHero({ userId }: HomeHeroProps) {
+  return (
+    <section className="relative -mt-[8.25rem] overflow-hidden rounded-[2rem] border border-white/10 bg-black pt-[8.25rem] shadow-[0_24px_90px_rgba(0,0,0,0.42)] md:-mt-[7.75rem] md:pt-[7.75rem]">
+      <div className="relative min-h-[78dvh] overflow-hidden bg-[linear-gradient(180deg,#070909_0%,#050505_100%)] md:min-h-[760px]">
+        <iframe
+          src={splineUrl}
+          title="Interactive 3D computer background"
+          frameBorder="0"
+          className="absolute left-1/2 top-1/2 z-[1] h-[112%] w-[112%] -translate-x-1/2 -translate-y-1/2 border-0 opacity-100 md:h-[118%] md:w-[118%]"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          loading="eager"
+        />
+        <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_50%_42%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.08)_42%,rgba(0,0,0,0.42)_82%,rgba(0,0,0,0.72)_100%),linear-gradient(90deg,rgba(0,0,0,0.54)_0%,rgba(0,0,0,0.18)_32%,rgba(0,0,0,0)_60%,rgba(0,0,0,0.2)_100%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-40 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.72)_72%,#050505_100%)]" />
+        <N8nTriggerButton
+          userId={userId}
+          showMessage={false}
+          className="pointer-events-auto absolute right-6 top-[10.5rem] z-20 md:right-12 md:top-[9.5rem] lg:right-16"
+          buttonClassName="border border-transparent bg-moss px-8 py-3.5 text-ink shadow-[0_18px_55px_rgba(91,190,178,0.34)] hover:bg-[#72d4c9]"
+        />
+
+        <div className="pointer-events-none relative z-10 flex min-h-[78dvh] flex-col justify-end px-5 py-8 md:min-h-[760px] md:px-10 md:py-10">
+          <div className="pb-7">
+            <div className="max-w-4xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-moss">
+                MorningStar
+              </p>
+              <h1 className="mt-4 font-[family-name:var(--font-heading)] text-5xl font-semibold leading-[0.98] tracking-[-0.075em] text-paper drop-shadow-[0_18px_45px_rgba(0,0,0,0.55)] md:text-7xl lg:text-8xl">
+                Study English With Korean News
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-7 text-paper/72 drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
+                Collect Korean news, save useful vocabulary, and turn sources
+                into clearer English analysis.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-rows-[1.25fr_0.75fr]">
-        <div className="relative overflow-hidden rounded-[2rem] border border-line/70 bg-[linear-gradient(135deg,rgba(227,130,74,0.92),rgba(107,67,47,0.85))] p-6">
-          <div className="absolute -left-10 top-10 h-40 w-40 rounded-full bg-[#ffd8b3]/50 blur-3xl" />
-          <div className="absolute right-5 top-5 rounded-full bg-paper/85 px-3 py-1 text-xs uppercase tracking-[0.18em] text-clay">
-            Editorial board
-          </div>
-          <div className="relative flex h-full flex-col justify-end">
-            <p className="text-sm uppercase tracking-[0.2em] text-paper/80">
-              Analysis request
-            </p>
-            <h2 className="mt-3 max-w-sm font-[family-name:var(--font-heading)] text-4xl font-semibold leading-tight text-paper">
-              A lighter, more visual desk for collecting related news.
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-[0.92fr_1.08fr]">
-          <div className="overflow-hidden rounded-[1.75rem] border border-line/70 bg-[linear-gradient(180deg,#f7e6cf,#ead1b2)] p-4">
-            <div className="h-full rounded-[1.25rem] border border-paper/70 bg-paper/60 p-4">
-              <div className="h-24 rounded-[1rem] bg-[linear-gradient(180deg,rgba(229,121,69,0.4),rgba(255,255,255,0.1))]" />
-              <div className="mt-4 h-2 w-20 rounded-full bg-[#d5b597]" />
-              <div className="mt-2 h-2 w-28 rounded-full bg-[#e3c7aa]" />
-            </div>
-          </div>
-          <div className="rounded-[1.75rem] border border-line bg-paper p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-clay">Flow</p>
-            <div className="mt-4 space-y-3">
-              <div className="rounded-[1rem] bg-accent/55 px-4 py-3 text-sm text-ink">
-                1. Save the story that catches your attention
+      <div className="bg-black px-4 pb-5 pt-7 md:px-6 md:pb-7">
+        <div className="grid gap-3 md:grid-cols-4">
+          {pageCards.map((card) => (
+            <Link
+              key={card.title}
+              href={card.href}
+              className="group overflow-hidden rounded-[1.2rem] border border-line bg-white shadow-soft transition hover:-translate-y-1 hover:border-moss"
+            >
+              <div
+                className="h-28 bg-accent"
+                style={{
+                  backgroundImage: `linear-gradient(180deg,rgba(255,255,252,0.1),rgba(23,23,23,0.12)),url("https://picsum.photos/seed/${card.seed}/640/360")`,
+                  backgroundPosition: "center",
+                  backgroundSize: "cover"
+                }}
+              />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold tracking-[-0.04em] text-ink transition group-hover:text-moss">
+                  {card.title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-clay">{card.text}</p>
               </div>
-              <div className="rounded-[1rem] bg-[#f7ead9] px-4 py-3 text-sm text-ink">
-                2. Add more sources and refine your request
-              </div>
-              <div className="rounded-[1rem] bg-accent/55 px-4 py-3 text-sm text-ink">
-                3. Turn the bundle into a clearer analysis
-              </div>
-            </div>
-          </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

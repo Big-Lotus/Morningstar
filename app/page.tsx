@@ -48,9 +48,9 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto w-full space-y-8">
-      <HomeHero />
+      <HomeHero userId={currentUsername} />
 
-      <div className="rounded-[2rem] border border-line/70 bg-paper/88 p-5 md:p-6">
+      <div className="rounded-[1.5rem] border border-transparent bg-paper/86 p-4 shadow-soft backdrop-blur md:p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <CategoryTabs
           categories={categories}
@@ -60,7 +60,7 @@ export default function HomePage() {
         <button
           type="button"
           onClick={resetOnboarding}
-          className="soft-ring w-fit rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay transition hover:border-clay hover:text-ink"
+          className="soft-ring w-fit rounded-full border border-transparent bg-transparent px-4 py-2 text-sm text-clay transition hover:bg-accent hover:text-ink"
         >
           Change interests
         </button>
@@ -69,7 +69,11 @@ export default function HomePage() {
 
       <ArticleCarousel
         eyebrow="For Your Interests"
-        title="News collected from the areas you picked"
+        title={
+          <>
+            News <span className="text-moss">Collected</span>
+          </>
+        }
       >
         {interestArticles.map((article) => (
           <ArticleCard key={article.slug} article={article} />

@@ -114,50 +114,40 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className="mx-auto w-full space-y-7">
-      <section className="grid gap-5 border-b border-line/80 pb-7 lg:grid-cols-[1.25fr_0.75fr]">
-        <div>
-          <p className="text-sm uppercase tracking-[0.22em] text-moss">
-            Community
-          </p>
-          <h1 className="mt-3 max-w-4xl font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight text-ink md:text-6xl">
-            Insight boards and live issue rooms.
-          </h1>
-          <div className="mt-6 flex flex-wrap gap-2">
+    <main className="mx-auto w-full space-y-8">
+      <section className="rounded-[2rem] border border-white/12 bg-[rgba(5,10,14,0.58)] px-5 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.3)] backdrop-blur-xl md:px-8 md:py-10">
+        <div className="mx-auto max-w-5xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-medium text-moss">Community</p>
+            <h1 className="mt-4 font-[family-name:var(--font-heading)] text-5xl font-semibold leading-[0.98] tracking-[-0.07em] text-white md:text-7xl">
+              Share Your <span className="text-moss">Insights</span>
+            </h1>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveView("insights")}
-              className={`soft-ring rounded-full border px-5 py-3 text-sm font-medium ${
+              className={`soft-ring rounded-full border border-black px-5 py-3 text-sm font-medium transition ${
                 activeView === "insights"
-                  ? "border-moss bg-moss text-paper"
-                  : "border-line bg-paper/90 text-clay hover:border-moss hover:text-ink"
+                  ? "bg-white/14 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+                  : "bg-black text-white hover:bg-white/10"
               }`}
             >
-              Shared Analysis
+              Analysis
             </button>
             <button
               type="button"
               onClick={() => setActiveView("issues")}
-              className={`soft-ring rounded-full border px-5 py-3 text-sm font-medium ${
+              className={`soft-ring rounded-full border border-black px-5 py-3 text-sm font-medium transition ${
                 activeView === "issues"
-                  ? "border-moss bg-moss text-paper"
-                  : "border-line bg-paper/90 text-clay hover:border-moss hover:text-ink"
+                  ? "bg-white/14 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+                  : "bg-black text-white hover:bg-white/10"
               }`}
             >
-              Votes & Issues
+              Votes
             </button>
           </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-          <MetricCard label="Analysis" value={insightPosts.length.toString()} />
-          <MetricCard label="Issues" value={issuePosts.length.toString()} />
-          <MetricCard
-            label="Votes"
-            value={issuePosts
-              .reduce((total, post) => total + (post.pollVotes?.length ?? 0), 0)
-              .toString()}
-          />
         </div>
       </section>
 
@@ -165,17 +155,17 @@ export default function CommunityPage() {
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm uppercase tracking-[0.22em] text-moss">
-                On Rage 🔥
+              <p className="text-sm font-medium text-moss">
+                Active rooms
               </p>
-              <h2 className="mt-1 font-[family-name:var(--font-heading)] text-4xl font-semibold text-ink">
+              <h2 className="mt-1 font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-[-0.05em] text-ink">
                 Most active issue rooms
               </h2>
             </div>
             <button
               type="button"
               onClick={() => setActiveView("issues")}
-              className="soft-ring hidden rounded-full border border-line bg-paper/90 px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink md:inline-flex"
+              className="soft-ring hidden rounded-full border border-line bg-white px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink md:inline-flex"
             >
               See all issues
             </button>
@@ -281,30 +271,19 @@ export default function CommunityPage() {
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1.25rem] border border-line bg-paper/92 px-5 py-4 shadow-soft">
-      <p className="text-xs uppercase tracking-[0.18em] text-clay">{label}</p>
-      <p className="mt-2 font-[family-name:var(--font-heading)] text-4xl font-semibold text-ink">
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function HotPollCard({ post, rank }: { post: CommunityPost; rank: number }) {
   const votes = post.pollVotes?.length ?? 0;
   const opinions = post.pollVotes?.filter((vote) => vote.opinion).slice(0, 2) ?? [];
 
   return (
-    <article className="rounded-[1.35rem] border border-moss/35 bg-[linear-gradient(135deg,#fff7ed,#f7ddc6)] p-5 shadow-soft">
+    <article className="rounded-[1.35rem] border border-moss/35 bg-accent p-5 shadow-soft">
       <div className="flex items-center justify-between gap-3">
-        <span className="rounded-full bg-moss px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-paper">
-          #{rank} On Rage
+        <span className="rounded-full bg-moss px-3 py-1 text-xs font-medium text-paper">
+          #{rank} Active
         </span>
         <span className="text-sm font-medium text-moss">{votes} votes</span>
       </div>
-      <h3 className="mt-4 font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight text-ink">
+      <h3 className="mt-4 font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight tracking-[-0.05em] text-ink">
         {post.title}
       </h3>
       <p className="mt-3 line-clamp-3 text-sm leading-6 text-clay">
@@ -363,8 +342,8 @@ function InsightCard({
   return (
     <article className="rounded-[1.35rem] border border-line bg-paper/95 p-5 shadow-soft">
       <PostHeader post={post} canDeletePost={canDeletePost} onDeletePost={onDeletePost} />
-      <div className="mt-4 rounded-[1.15rem] bg-accent/40 px-4 py-3">
-        <p className="text-xs uppercase tracking-[0.18em] text-clay">Insight</p>
+      <div className="mt-4 rounded-[1.15rem] bg-accent px-4 py-3">
+        <p className="text-xs font-medium text-clay">Insight</p>
         <p className="mt-2 whitespace-pre-line text-base leading-7 text-ink">
           {post.insight}
         </p>
@@ -443,7 +422,7 @@ function IssueCard({
               : 0;
 
           return (
-            <div key={option.id} className="rounded-[1rem] border border-line bg-[#fff8ef] p-4">
+            <div key={option.id} className="rounded-[1rem] border border-line bg-white p-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-ink">{option.label}</p>
                 <p className="text-sm text-clay">
@@ -487,7 +466,7 @@ function IssueCard({
                 name={`vote-${post.id}`}
                 checked={voteDraft.optionId === option.id}
                 onChange={() => onVoteDraftChange("optionId", option.id)}
-                className="accent-[#e57945]"
+                className="accent-[#5bbeb2]"
               />
               {option.label}
             </label>
@@ -509,7 +488,7 @@ function IssueCard({
       </form>
 
       <div className="mt-5 rounded-[1rem] border border-line bg-accent/30 p-4">
-        <p className="text-xs uppercase tracking-[0.18em] text-clay">
+        <p className="text-xs font-medium text-clay">
           Summary Insight
         </p>
         {canDeletePost ? (
@@ -569,14 +548,14 @@ function PollComposer({
       onSubmit={onSubmit}
       className="h-fit rounded-[1.35rem] border border-line bg-paper/95 p-5 shadow-soft"
     >
-      <p className="text-sm uppercase tracking-[0.22em] text-moss">
+      <p className="text-sm font-medium text-moss">
         Ask the Community
       </p>
       <h2 className="mt-2 font-[family-name:var(--font-heading)] text-4xl font-semibold text-ink">
         Open an issue room
       </h2>
       <label className="mt-5 block">
-        <span className="text-xs uppercase tracking-[0.18em] text-clay">Title</span>
+        <span className="text-xs font-medium text-clay">Title</span>
         <input
           value={title}
           onChange={(event) => onTitleChange(event.target.value)}
@@ -585,7 +564,7 @@ function PollComposer({
         />
       </label>
       <label className="mt-4 block">
-        <span className="text-xs uppercase tracking-[0.18em] text-clay">
+        <span className="text-xs font-medium text-clay">
           Question
         </span>
         <textarea
@@ -598,7 +577,7 @@ function PollComposer({
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
         {options.map((option, index) => (
           <label key={index} className="block">
-            <span className="text-xs uppercase tracking-[0.18em] text-clay">
+            <span className="text-xs font-medium text-clay">
               Option {index + 1}
             </span>
             <input
@@ -643,22 +622,22 @@ function PostHeader({
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
       <div>
-        <p className="text-xs uppercase tracking-[0.18em] text-clay">
+        <p className="text-xs font-medium text-clay">
           Shared by {post.authorName}
         </p>
-        <h2 className="mt-2 font-[family-name:var(--font-heading)] text-4xl font-semibold leading-tight text-ink">
+        <h2 className="mt-2 font-[family-name:var(--font-heading)] text-4xl font-semibold leading-tight tracking-[-0.05em] text-ink">
           {post.title}
         </h2>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-xs uppercase tracking-[0.14em] text-clay">
+        <p className="text-xs font-medium text-clay">
           {new Date(post.createdAt).toLocaleDateString()}
         </p>
         {canDeletePost ? (
           <button
             type="button"
             onClick={onDeletePost}
-            className="soft-ring rounded-full border border-line bg-paper px-3 py-1 text-xs uppercase tracking-[0.14em] text-clay hover:border-clay hover:text-ink"
+            className="soft-ring rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-clay hover:border-moss hover:text-ink"
           >
             Delete
           </button>
@@ -670,8 +649,8 @@ function PostHeader({
 
 function MiniTextPanel({ label, text }: { label: string; text: string }) {
   return (
-    <section className="rounded-[1rem] border border-line bg-[#fff8ef] p-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-clay">{label}</p>
+    <section className="rounded-[1rem] border border-line bg-white p-4">
+      <p className="text-xs font-medium text-clay">{label}</p>
       <p className="mt-2 line-clamp-5 whitespace-pre-line text-sm leading-7 text-clay">
         {text}
       </p>
@@ -682,7 +661,7 @@ function MiniTextPanel({ label, text }: { label: string; text: string }) {
 function ReferenceGrid({ sources }: { sources: Article[] }) {
   return (
     <section className="mt-5">
-      <p className="text-xs uppercase tracking-[0.18em] text-clay">References</p>
+      <p className="text-xs font-medium text-clay">References</p>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         {sources.map((source) => (
           <Link
@@ -692,7 +671,7 @@ function ReferenceGrid({ sources }: { sources: Article[] }) {
             rel="noreferrer"
             className="soft-ring rounded-[1rem] border border-line bg-accent/45 p-4 hover:border-clay hover:bg-paper"
           >
-            <p className="text-xs uppercase tracking-[0.14em] text-clay">
+            <p className="text-xs font-medium text-clay">
               {source.sourceName}
             </p>
             <h3 className="mt-2 font-[family-name:var(--font-heading)] text-xl font-semibold leading-tight text-ink">
@@ -723,7 +702,7 @@ function CommentsPanel({
   return (
     <section className="mt-6 border-t border-line pt-5">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm uppercase tracking-[0.2em] text-clay">Comments</p>
+        <p className="text-sm font-medium text-clay">Comments</p>
         <span className="text-sm text-clay">{post.comments.length}</span>
       </div>
       <div className="mt-4 grid gap-3">
@@ -736,14 +715,14 @@ function CommentsPanel({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-ink">{comment.authorName}</p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-xs uppercase tracking-[0.14em] text-clay">
+                  <p className="text-xs font-medium text-clay">
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </p>
                   {comment.authorName === currentUsername ? (
                     <button
                       type="button"
                       onClick={() => onDeleteComment(comment.id)}
-                      className="soft-ring rounded-full border border-line bg-paper px-3 py-1 text-xs uppercase tracking-[0.14em] text-clay hover:border-clay hover:text-ink"
+                      className="soft-ring rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-clay hover:border-moss hover:text-ink"
                     >
                       Delete
                     </button>

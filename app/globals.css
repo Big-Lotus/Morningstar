@@ -4,7 +4,7 @@
 
 :root {
   color-scheme: light;
-  --font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font-heading: "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
   --font-body: "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
   --soft-duration: 220ms;
   --soft-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -17,17 +17,16 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 50% 0%, rgba(229, 121, 69, 0.16), transparent 30rem),
-    radial-gradient(circle at 88% 12%, rgba(255, 210, 170, 0.22), transparent 24rem),
-    radial-gradient(circle at 8% 18%, rgba(255, 234, 208, 0.88), transparent 22rem),
-    linear-gradient(180deg, #fffbf4 0%, #fff7ed 62%, #f8ead8 100%);
-  color: #1f1a16;
+    radial-gradient(circle at 72% 8%, rgba(91, 190, 178, 0.16), transparent 26rem),
+    radial-gradient(circle at 16% 24%, rgba(255, 255, 252, 0.06), transparent 30rem),
+    linear-gradient(180deg, #050505 0%, #080909 58%, #020202 100%);
+  color: #171717;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgba(229, 121, 69, 0.24);
-  color: #1f1a16;
+  background: rgba(91, 190, 178, 0.24);
+  color: #171717;
   text-shadow: none;
 }
 
@@ -65,7 +64,17 @@ a {
 
 .soft-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(229, 121, 69, 0.22);
+  box-shadow: 0 0 0 4px rgba(91, 190, 178, 0.24);
+}
+
+button.rounded-full.border,
+a.rounded-full.border {
+  border-color: transparent !important;
+}
+
+button.rounded-full.border:hover,
+a.rounded-full.border:hover {
+  background-color: rgba(91, 190, 178, 0.14);
 }
 
 .soft-fade-in {

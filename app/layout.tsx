@@ -7,8 +7,8 @@ import { AuthStatus } from "@/components/AuthStatus";
 import { LearningStoreProvider } from "@/providers/learning-store";
 
 export const metadata: Metadata = {
-  title: "Saetbyeol",
-  description: "A calm news learning space for building English through real issues."
+  title: "MorningStar",
+  description: "A clean news learning desk for collecting stories, vocabulary, and investigations."
 };
 
 export default function RootLayout({
@@ -20,27 +20,25 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-canvas font-[family-name:var(--font-body)] text-ink antialiased">
         <LearningStoreProvider>
-          <div className="mx-auto min-h-screen w-full px-2 pb-12 pt-2 md:px-3 lg:px-4">
-            <header className="mb-8 flex flex-col gap-4 rounded-[2rem] border border-line/70 bg-paper/82 px-5 py-5 shadow-soft md:flex-row md:items-end md:justify-between md:px-7">
-              <div>
+          <div className="mx-auto min-h-screen w-full max-w-[1500px] px-0 pb-14 pt-0 md:px-0 lg:px-0">
+            <header className="sticky top-0 z-30 mb-7 border-b border-white/12 bg-[rgba(6,6,7,0.88)] shadow-[0_10px_40px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+              <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-6 px-6 py-5 md:px-8 lg:px-10">
                 <Link
                   href="/"
-                  className="font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-[0.02em] text-ink"
+                  className="shrink-0 font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-[-0.03em] text-white"
                 >
-                  Saetbyeol
+                  MorningStar
                 </Link>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-clay">
-                  A calm news learning space that turns real issues into
-                  steady English practice.
-                </p>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <AppNavigation />
-                <AuthStatus />
+                <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                  <AppNavigation />
+                  <AuthStatus />
+                </div>
               </div>
             </header>
-            {children}
+            <div className="px-3 md:px-5 lg:px-7">
+              {children}
+            </div>
           </div>
         </LearningStoreProvider>
       </body>

@@ -4,8 +4,7 @@ type SplineComputerProps = {
   variant?: "card" | "stage" | "background";
 };
 
-const splineUrl =
-  "https://my.spline.design/cutecomputerfollowcursor-nOkpDVcYzEvvSrloO9SbWENR/";
+const splineUrl = "/api/spline";
 
 export function SplineComputer({
   className = "",
@@ -17,10 +16,10 @@ export function SplineComputer({
 
   return (
     <div
-      className={`relative overflow-hidden ${
+      className={`overflow-hidden ${
         isImmersive
           ? "bg-[radial-gradient(circle_at_50%_42%,rgba(91,190,178,0.2),transparent_35%),linear-gradient(180deg,#fffffc_0%,#eef8f6_54%,#f7f7f3_100%)]"
-          : "rounded-[1.75rem] border border-line/80 bg-paper shadow-soft"
+          : "relative rounded-[1.75rem] border border-line/80 bg-paper shadow-soft"
       } ${className}`}
     >
       <iframe
@@ -29,7 +28,7 @@ export function SplineComputer({
         frameBorder="0"
         className={
           isImmersive
-            ? `absolute left-1/2 top-1/2 z-0 h-[150%] w-[150%] -translate-x-1/2 -translate-y-1/2 scale-[0.74] border-0 md:h-[168%] md:w-[168%] md:scale-[0.68] ${
+            ? `absolute inset-0 z-0 h-full w-full border-0 ${
                 isBackground ? "pointer-events-none" : ""
               }`
             : "h-full min-h-[320px] w-full"

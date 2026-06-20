@@ -144,7 +144,7 @@ export function ArticleCarousel({
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border border-line/80 bg-paper/70 p-4 shadow-soft backdrop-blur md:p-6">
+      <div className="rounded-[1.75rem] border border-black bg-black p-4 shadow-soft backdrop-blur md:p-6">
         <div
           ref={containerRef}
           onPointerDown={handlePointerDown}

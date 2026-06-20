@@ -22,7 +22,7 @@ export type SavedVocabulary = {
   word: string;
   meaning: string;
   sentence: string;
-  sourceSlug: string;
+  sourceSlug?: string;
 };
 
 export type ComposedArticle = {

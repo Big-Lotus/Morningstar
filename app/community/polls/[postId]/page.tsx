@@ -7,8 +7,10 @@ import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/AuthPanel";
 import {
   getCommunityCardVisual,
+  getCommunityOpinionSummaries,
   getCommunityPollResults,
   getCommunityStoryBlocks,
+  getCommunityUsefulExpressions,
   MARATHON_POST_ID
 } from "@/lib/community-featured";
 import { CommunityPost } from "@/lib/types";
@@ -19,7 +21,9 @@ export default function PollRoomPage() {
   const {
     currentUsername,
     communityPosts,
+    hasSavedWord,
     isHydrated,
+    saveWord,
     voteCommunityPoll,
     updatePollSummaryInsight,
     addCommunityComment,
@@ -77,7 +81,9 @@ export default function PollRoomPage() {
   }
 
   const pollResults = getCommunityPollResults(post);
+  const opinionSummaries = getCommunityOpinionSummaries(post);
   const storyBlocks = getCommunityStoryBlocks(post);
+  const usefulExpressions = getCommunityUsefulExpressions(post);
   const visual = getCommunityCardVisual(post, 0);
   const totalVotes = pollResults.reduce((sum, result) => sum + result.votes, 0);
   const canDeletePost =
@@ -102,6 +108,16 @@ export default function PollRoomPage() {
   const saveSummary = () => {
     updatePollSummaryInsight(post.id, summaryDraft);
     setSummarySaved(true);
+  };
+
+  const saveExpression = (
+    expression: ReturnType<typeof getCommunityUsefulExpressions>[number]
+  ) => {
+    saveWord({
+      word: expression.phrase,
+      meaning: expression.meaning,
+      sentence: expression.example
+    });
   };
 
   return (
@@ -161,6 +177,55 @@ export default function PollRoomPage() {
 
       <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-5">
+          {usefulExpressions.length > 0 ? (
+            <section className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] md:p-6">
+              <p className="text-sm font-semibold text-moss">
+                Useful Expressions
+              </p>
+              <h2 className="mt-1 font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-[-0.05em] text-ink">
+                Key words from this debate
+              </h2>
+              <div className="mt-6 grid gap-3">
+                {usefulExpressions.map((expression) => {
+                  const isSaved = hasSavedWord(
+                    expression.phrase,
+                    expression.example
+                  );
+
+                  return (
+                    <article
+                      key={expression.id}
+                      className="rounded-[1rem] border border-line bg-accent/60 p-4"
+                    >
+                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+                        <div>
+                          <p className="font-[family-name:var(--font-heading)] text-2xl font-semibold leading-tight tracking-[-0.035em] text-ink">
+                            {expression.phrase}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-clay">
+                            {expression.meaning}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => saveExpression(expression)}
+                          disabled={isSaved}
+                          className="soft-ring w-fit shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:-translate-y-0.5 hover:bg-moss disabled:cursor-default disabled:bg-line disabled:text-clay"
+                        >
+                          {isSaved ? "Saved" : "Save"}
+                        </button>
+                      </div>
+                      <p className="mt-3 rounded-[0.85rem] bg-paper/82 px-3 py-2 text-sm leading-6 text-clay">
+                        <span className="font-bold text-ink">Ex)</span>{" "}
+                        {expression.example}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
           <section className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] md:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -176,6 +241,25 @@ export default function PollRoomPage() {
               ))}
             </div>
           </section>
+
+          {opinionSummaries.length > 0 ? (
+            <section className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] md:p-6">
+              <p className="text-sm font-semibold text-moss">
+                Opinion summaries by vote
+              </p>
+              <h2 className="mt-1 font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-[-0.05em] text-ink">
+                What each side emphasized
+              </h2>
+              <div className="mt-6 grid gap-4">
+                {opinionSummaries.map((summary) => (
+                  <OpinionSummaryCard
+                    key={summary.optionId}
+                    summary={summary}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {storyBlocks.length > 0 ? (
             <section className="grid gap-4">
@@ -322,6 +406,65 @@ function ResultCard({
         />
       </div>
       <p className="mt-3 text-sm font-medium text-clay">{result.votes} votes</p>
+    </article>
+  );
+}
+
+function OpinionSummaryCard({
+  summary
+}: {
+  summary: ReturnType<typeof getCommunityOpinionSummaries>[number];
+}) {
+  return (
+    <article
+      className={`rounded-[1rem] border p-4 ${summary.borderClass} ${summary.surfaceClass}`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className={`h-3 w-3 rounded-full ${summary.swatchClass}`} />
+            <p className="text-sm font-semibold text-ink">{summary.label}</p>
+          </div>
+          <p className="mt-2 text-xs font-semibold text-clay">{summary.tone}</p>
+        </div>
+      </div>
+      <p className="mt-4 max-w-3xl text-sm leading-7 text-clay">
+        {summary.summary}
+      </p>
+      <div className="mt-4 grid gap-2">
+        {summary.points.map((point) => (
+          <p
+            key={point}
+            className="rounded-[0.85rem] bg-paper/72 px-3 py-2 text-sm leading-6 text-clay"
+          >
+            {point}
+          </p>
+        ))}
+      </div>
+      {summary.examples?.length ? (
+        <div className="mt-5 border-t border-ink/10 pt-4">
+          <p className="text-xs font-semibold text-clay">Opinion examples</p>
+          <div className="mt-3 grid gap-3">
+            {summary.examples.map((example, index) => (
+              <article
+                key={`${summary.optionId}-${example.name}-${index}`}
+                className="rounded-[0.9rem] bg-paper/82 px-4 py-3"
+              >
+                <p className={`text-sm font-bold ${summary.textClass}`}>
+                  {example.name}
+                </p>
+                <p className="mt-1 text-sm leading-7 text-clay">
+                  {example.opinion}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <blockquote className="mt-4 border-l-4 border-ink/12 pl-4 text-sm font-medium leading-7 text-ink">
+          {summary.quote}
+        </blockquote>
+      )}
     </article>
   );
 }

@@ -46,7 +46,8 @@ import { createUser, getUserByUsername } from "@/lib/db/users";
 import {
   addSavedVocabulary,
   deleteSavedVocabulary,
-  getSavedVocabulary
+  getSavedVocabulary,
+  updateSavedVocabulary
 } from "@/lib/db/vocabulary";
 import {
   Article,
@@ -98,6 +99,7 @@ type LearningStoreValue = {
   resetOnboarding: () => void;
   saveWord: (entry: Omit<SavedVocabulary, "id">) => void;
   hasSavedWord: (word: string, sentence: string) => boolean;
+  updateWord: (id: string, entry: Omit<SavedVocabulary, "id">) => void;
   removeWord: (id: string) => void;
   toggleBookmark: (slug: string) => void;
   addCustomArticleFromUrl: (sourceUrl: string) => string | null;
@@ -455,6 +457,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           word: normalizedWord,
           meaning: normalizedMeaning,
           sentence: normalizedSentence,
+          sourceSlug: entry.sourceSlug?.trim() || undefined,
           id: crypto.randomUUID()
         };
 
@@ -468,7 +471,12 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
               addSavedVocabulary(
                 currentUserId,
                 savedEntry,
-                getSourceType(entry.sourceSlug, [...feedArticles, ...customArticles])
+                savedEntry.sourceSlug
+                  ? getSourceType(savedEntry.sourceSlug, [
+                      ...feedArticles,
+                      ...customArticles
+                    ])
+                  : "manual"
               ),
             "save vocabulary"
           );
@@ -487,6 +495,50 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
             item.word.toLowerCase() === normalizedWord &&
             item.sentence === normalizedSentence
         );
+      },
+      updateWord: (id, entry) => {
+        const normalizedWord = entry.word.trim();
+        const normalizedMeaning = entry.meaning.trim();
+        const normalizedSentence = entry.sentence.trim();
+
+        if (
+          !normalizedWord ||
+          !normalizedMeaning ||
+          !normalizedSentence ||
+          !currentUsername
+        ) {
+          return;
+        }
+
+        const updatedEntry: SavedVocabulary = {
+          id,
+          word: normalizedWord,
+          meaning: normalizedMeaning,
+          sentence: normalizedSentence,
+          sourceSlug: entry.sourceSlug?.trim() || undefined
+        };
+
+        setSavedWords((current) =>
+          current.map((item) => (item.id === id ? updatedEntry : item))
+        );
+
+        if (currentUserId && isSupabaseConfigured) {
+          runDbTask(
+            () =>
+              updateSavedVocabulary(
+                currentUserId,
+                id,
+                updatedEntry,
+                updatedEntry.sourceSlug
+                  ? getSourceType(updatedEntry.sourceSlug, [
+                      ...feedArticles,
+                      ...customArticles
+                    ])
+                  : "manual"
+              ),
+            "update vocabulary"
+          );
+        }
       },
       removeWord: (id) => {
         setSavedWords((current) => current.filter((item) => item.id !== id));

@@ -12,7 +12,7 @@ import {
 import { CommunityPost } from "@/lib/types";
 import { useLearningStore } from "@/providers/learning-store";
 
-const INITIAL_CARD_COUNT = 4;
+const INITIAL_CARD_COUNT = 7;
 
 export default function CommunityPage() {
   const {

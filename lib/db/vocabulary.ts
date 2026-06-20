@@ -3,13 +3,15 @@ import { SavedVocabulary } from "@/lib/types";
 
 type SavedVocabularyRow = {
   id: string;
-  source_type: "article" | "custom_source";
+  source_type: VocabularySourceType;
   source_id: string;
   word: string;
   meaning: string | null;
   sentence: string;
   created_at: string;
 };
+
+type VocabularySourceType = "article" | "custom_source" | "manual";
 
 export async function getSavedVocabulary(userId: string) {
   const db = requireSupabase();
@@ -37,7 +39,7 @@ export async function getSavedVocabulary(userId: string) {
 export async function addSavedVocabulary(
   userId: string,
   entry: SavedVocabulary,
-  sourceType: "article" | "custom_source"
+  sourceType: VocabularySourceType
 ) {
   const db = requireSupabase();
   const sourceId = await getSourceId(userId, sourceType, entry.sourceSlug);
@@ -75,13 +77,42 @@ export async function deleteSavedVocabulary(userId: string, vocabularyId: string
   }
 }
 
+export async function updateSavedVocabulary(
+  userId: string,
+  vocabularyId: string,
+  entry: Omit<SavedVocabulary, "id">,
+  sourceType: VocabularySourceType
+) {
+  const db = requireSupabase();
+  const sourceId = await getSourceId(userId, sourceType, entry.sourceSlug);
+  const { error } = await db
+    .from("saved_vocabulary")
+    .update({
+      source_type: sourceType,
+      source_id: sourceId,
+      word: entry.word,
+      meaning: entry.meaning,
+      sentence: entry.sentence
+    })
+    .eq("user_id", userId)
+    .eq("id", vocabularyId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 async function getSourceId(
   userId: string,
-  sourceType: "article" | "custom_source",
-  slug: string
+  sourceType: VocabularySourceType,
+  slug?: string
 ) {
+  if (sourceType === "manual") {
+    return slug || "manual";
+  }
+
   if (sourceType === "article") {
-    return slug;
+    return slug || "manual";
   }
 
   const db = requireSupabase();
@@ -100,9 +131,13 @@ async function getSourceId(
 }
 
 async function getSourceSlug(
-  sourceType: "article" | "custom_source",
+  sourceType: VocabularySourceType,
   sourceId: string
 ) {
+  if (sourceType === "manual") {
+    return sourceId;
+  }
+
   if (sourceType === "article") {
     return sourceId;
   }

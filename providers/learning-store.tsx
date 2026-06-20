@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { articles } from "@/lib/data";
+import { mergeFeaturedCommunityPosts } from "@/lib/community-featured";
 import { getArticles as getDbArticles } from "@/lib/db/articles";
 import { toggleBookmark as toggleDbBookmark } from "@/lib/db/bookmarks";
 import { isSupabaseConfigured, supabase } from "@/lib/db/client";
@@ -1041,11 +1042,13 @@ function normalizeCommunityPosts(
     CommunityPost & { authorName?: string; sourceSnapshots?: Article[] }
   >
 ): CommunityPost[] {
-  return posts.map((post) => ({
-    ...post,
-    authorName: post.authorName ?? "Unknown",
-    sourceSnapshots: post.sourceSnapshots ?? []
-  }));
+  return mergeFeaturedCommunityPosts(
+    posts.map((post) => ({
+      ...post,
+      authorName: post.authorName ?? "Unknown",
+      sourceSnapshots: post.sourceSnapshots ?? []
+    }))
+  );
 }
 
 async function loadRemoteCommunityPosts() {
@@ -1058,10 +1061,7 @@ async function loadRemoteCommunityPosts() {
     getCommunityPolls()
   ]);
 
-  return [...analysisPosts, ...pollPosts].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return mergeFeaturedCommunityPosts([...analysisPosts, ...pollPosts]);
 }
 
 function accountKey(username: string) {

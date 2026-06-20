@@ -5,6 +5,13 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AuthPanel } from "@/components/AuthPanel";
+import {
+  getCommunityCardVisual,
+  getCommunityPollResults,
+  getCommunityStoryBlocks,
+  MARATHON_POST_ID
+} from "@/lib/community-featured";
+import { CommunityPost } from "@/lib/types";
 import { useLearningStore } from "@/providers/learning-store";
 
 export default function PollRoomPage() {
@@ -54,12 +61,12 @@ export default function PollRoomPage() {
   if (!post || !post.pollOptions?.length) {
     return (
       <main className="mx-auto w-full">
-        <section className="rounded-[1.35rem] border border-dashed border-line bg-paper/80 p-8 text-center text-clay">
+        <section className="rounded-[1.25rem] border border-dashed border-line bg-paper/90 p-8 text-center text-clay">
           This issue room is no longer available.
           <div className="mt-4">
             <Link
               href="/community"
-              className="soft-ring inline-flex rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
+              className="soft-ring inline-flex rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-moss"
             >
               Back to Community
             </Link>
@@ -69,8 +76,12 @@ export default function PollRoomPage() {
     );
   }
 
-  const pollVotes = post.pollVotes ?? [];
-  const canDeletePost = post.authorName === currentUsername;
+  const pollResults = getCommunityPollResults(post);
+  const storyBlocks = getCommunityStoryBlocks(post);
+  const visual = getCommunityCardVisual(post, 0);
+  const totalVotes = pollResults.reduce((sum, result) => sum + result.votes, 0);
+  const canDeletePost =
+    post.authorName === currentUsername && post.id !== MARATHON_POST_ID;
 
   const submitVote = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -95,129 +106,115 @@ export default function PollRoomPage() {
 
   return (
     <main className="mx-auto w-full space-y-6">
-      <section className="grid gap-5 rounded-[1.75rem] border border-line bg-paper/90 p-5 shadow-soft xl:grid-cols-[1.3fr_0.7fr]">
-        <div>
-          <Link
-            href="/community"
-            className="soft-ring inline-flex rounded-full border border-line bg-white px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
-          >
-            Back to Community
-          </Link>
-          <p className="mt-5 text-sm font-medium text-moss">
-            Issue room
-          </p>
-          <h1 className="mt-3 font-[family-name:var(--font-heading)] text-5xl font-semibold leading-tight tracking-[-0.06em] text-ink md:text-7xl">
-            {post.title}
-          </h1>
-          <p className="mt-4 max-w-5xl whitespace-pre-line text-lg leading-8 text-clay">
-            {post.pollQuestion}
-          </p>
-        </div>
-
-        <aside className="rounded-[1.35rem] border border-moss/30 bg-accent p-5 shadow-soft">
-          <p className="text-xs font-medium text-clay">
-            Shared by
-          </p>
-          <p className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold tracking-[-0.05em] text-ink">
-            {post.authorName}
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-[1rem] bg-paper/80 p-4">
-              <p className="text-xs font-medium text-clay">
-                Votes
-              </p>
-              <p className="mt-2 font-[family-name:var(--font-heading)] text-4xl text-ink">
-                {pollVotes.length}
-              </p>
+      <section className="overflow-hidden rounded-[1.75rem] bg-paper shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
+        <div className="grid lg:grid-cols-[1.04fr_0.96fr]">
+          <div className="px-5 py-7 md:px-8 lg:px-10">
+            <Link
+              href="/community"
+              className="soft-ring inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink hover:-translate-y-0.5 hover:bg-line"
+            >
+              Back to cards
+            </Link>
+            <p className="mt-8 text-sm font-semibold text-moss">
+              Community issue room
+            </p>
+            <h1 className="mt-3 font-[family-name:var(--font-heading)] text-5xl font-semibold leading-[0.96] tracking-[-0.06em] text-ink md:text-7xl">
+              {post.title}
+            </h1>
+            <p className="mt-5 max-w-4xl whitespace-pre-line text-lg leading-8 text-clay">
+              {post.pollQuestion}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Metric label="Votes" value={totalVotes} />
+              <Metric label="Comments" value={post.comments.length} />
+              <Metric label="By" value={post.authorName} />
             </div>
-            <div className="rounded-[1rem] bg-paper/80 p-4">
-              <p className="text-xs font-medium text-clay">
-                Comments
-              </p>
-              <p className="mt-2 font-[family-name:var(--font-heading)] text-4xl text-ink">
-                {post.comments.length}
-              </p>
+            {canDeletePost ? (
+              <button
+                type="button"
+                onClick={() => deleteCommunityPost(post.id)}
+                className="soft-ring mt-5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-clay hover:bg-line hover:text-ink"
+              >
+                Delete room
+              </button>
+            ) : null}
+          </div>
+
+          <div className="relative min-h-[420px] overflow-hidden bg-ink">
+            <img
+              src={visual.imageUrl}
+              alt={visual.imageAlt}
+              className="absolute inset-0 h-full w-full object-cover opacity-75"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.72))]" />
+            <div className="relative flex h-full min-h-[420px] items-end p-5 md:p-8">
+              <div className="rounded-[1.15rem] bg-white/[0.14] p-4 text-white backdrop-blur-md">
+                <p className="text-sm font-semibold text-white">Card angle</p>
+                <p className="mt-2 max-w-lg text-sm leading-6 text-white/74">
+                  {visual.deck}
+                </p>
+              </div>
             </div>
           </div>
-          {canDeletePost ? (
-            <button
-              type="button"
-              onClick={() => deleteCommunityPost(post.id)}
-              className="soft-ring mt-5 rounded-full border border-line bg-white px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
-            >
-              Delete room
-            </button>
-          ) : null}
-        </aside>
+        </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-        <div className="grid gap-4 lg:grid-cols-2">
-          {post.pollOptions.map((option) => {
-            const optionVotes = pollVotes.filter(
-              (vote) => vote.optionId === option.id
-            );
-            const percentage =
-              pollVotes.length > 0
-                ? Math.round((optionVotes.length / pollVotes.length) * 100)
-                : 0;
+      <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-5">
+          <section className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] md:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-moss">Poll results</p>
+                <h2 className="mt-1 font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-[-0.05em] text-ink">
+                  {totalVotes} people shared their opinions
+                </h2>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {pollResults.map((result) => (
+                <ResultCard key={result.optionId} result={result} />
+              ))}
+            </div>
+          </section>
 
-            return (
-              <article
-                key={option.id}
-                className="rounded-[1.35rem] border border-line bg-paper/95 p-5 shadow-soft"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-[family-name:var(--font-heading)] text-3xl font-semibold text-ink">
-                    {option.label}
+          {storyBlocks.length > 0 ? (
+            <section className="grid gap-4">
+              {storyBlocks.map((block) => (
+                <article
+                  key={block.title}
+                  className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)] md:p-6"
+                >
+                  <p className="text-sm font-semibold text-moss">{block.eyebrow}</p>
+                  <h2 className="mt-2 font-[family-name:var(--font-heading)] text-3xl font-semibold leading-tight tracking-[-0.045em] text-ink md:text-4xl">
+                    {block.title}
                   </h2>
-                  <p className="text-sm font-medium text-moss">
-                    {percentage}% / {optionVotes.length}
-                  </p>
-                </div>
-                <div className="mt-4 h-4 overflow-hidden rounded-full bg-line">
-                  <div
-                    className="h-full rounded-full bg-moss transition-all"
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-                <div className="mt-4 grid gap-2">
-                  {optionVotes.filter((vote) => vote.opinion).length > 0 ? (
-                    optionVotes
-                      .filter((vote) => vote.opinion)
-                      .map((vote) => (
-                        <p
-                          key={vote.id}
-                          className="rounded-[1rem] bg-accent/35 px-3 py-2 text-sm leading-6 text-clay"
-                        >
-                          <span className="font-medium text-ink">
-                            {vote.authorName}
-                          </span>
-                          : {vote.opinion}
-                        </p>
-                      ))
-                  ) : (
-                    <p className="rounded-[1rem] bg-accent/25 px-3 py-2 text-sm text-clay">
-                      No written reactions yet.
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+                  <div className="mt-4 grid gap-3">
+                    {block.body.map((paragraph) => (
+                      <p
+                        key={paragraph}
+                        className="max-w-3xl text-base leading-8 text-clay"
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </section>
+          ) : null}
         </div>
 
         <aside className="space-y-5">
           <form
             onSubmit={submitVote}
-            className="rounded-[1.35rem] border border-line bg-paper/95 p-5 shadow-soft"
+            className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)]"
           >
-            <p className="text-sm text-clay">Voting as {currentUsername}</p>
-            <div className="mt-3 grid gap-2">
+            <p className="text-sm font-semibold text-moss">Vote as {currentUsername}</p>
+            <div className="mt-4 grid gap-2">
               {post.pollOptions.map((option) => (
                 <label
                   key={option.id}
-                  className="flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-2 text-sm text-clay"
+                  className="flex items-center gap-3 rounded-[1rem] bg-accent px-4 py-3 text-sm font-medium text-ink"
                 >
                   <input
                     type="radio"
@@ -243,34 +240,32 @@ export default function PollRoomPage() {
                   opinion: event.target.value
                 }))
               }
-              className="mt-3 min-h-[96px] w-full resize-y rounded-[1rem] border border-line bg-paper px-4 py-3 text-sm leading-7 text-ink outline-none soft-ring focus:border-clay"
+              className="mt-3 min-h-[104px] w-full resize-y rounded-[1rem] border border-line bg-paper px-4 py-3 text-sm leading-7 text-ink outline-none soft-ring focus:border-clay"
               placeholder="Add your reason or reaction."
             />
             <button
               type="submit"
               disabled={!voteDraft.optionId}
-              className="soft-ring mt-3 rounded-full border border-moss bg-moss px-5 py-2 text-sm font-medium text-paper transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-clay"
+              className="soft-ring mt-3 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:-translate-y-0.5 hover:bg-moss disabled:cursor-not-allowed disabled:bg-line disabled:text-clay"
             >
               Vote
             </button>
           </form>
 
-          <section className="rounded-[1.35rem] border border-line bg-paper/95 p-5 shadow-soft">
-            <p className="text-xs uppercase tracking-[0.18em] text-clay">
-              Summary Insight
-            </p>
+          <section className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)]">
+            <p className="text-sm font-semibold text-moss">Community takeaway</p>
             {canDeletePost ? (
               <>
                 <textarea
                   value={summaryDraft}
                   onChange={(event) => setSummaryDraft(event.target.value)}
-                  className="mt-2 min-h-[112px] w-full resize-y rounded-[1rem] border border-line bg-paper px-4 py-3 text-sm leading-7 text-ink outline-none soft-ring focus:border-clay"
+                  className="mt-3 min-h-[112px] w-full resize-y rounded-[1rem] border border-line bg-paper px-4 py-3 text-sm leading-7 text-ink outline-none soft-ring focus:border-clay"
                   placeholder="Summarize the strongest reactions here."
                 />
                 <button
                   type="button"
                   onClick={saveSummary}
-                  className="soft-ring mt-3 rounded-full border border-line bg-paper px-4 py-2 text-sm text-clay hover:border-moss hover:text-ink"
+                  className="soft-ring mt-3 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink hover:bg-line"
                 >
                   Save summary
                 </button>
@@ -279,76 +274,130 @@ export default function PollRoomPage() {
                 ) : null}
               </>
             ) : (
-              <p className="mt-2 whitespace-pre-line text-sm leading-7 text-clay">
+              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-clay">
                 {post.summaryInsight ||
                   "A summary insight can be added by the question author."}
               </p>
             )}
           </section>
+
+          <CommentsPanel
+            post={post}
+            currentUsername={currentUsername}
+            commentDraft={commentDraft}
+            onCommentDraftChange={setCommentDraft}
+            onCommentSubmit={submitComment}
+            onDeleteComment={(commentId) =>
+              deleteCommunityComment(post.id, commentId)
+            }
+          />
         </aside>
       </section>
-
-      <section className="rounded-[1.35rem] border border-line bg-paper/95 p-5 shadow-soft">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm uppercase tracking-[0.2em] text-clay">
-            Comments
-          </p>
-          <span className="text-sm text-clay">{post.comments.length}</span>
-        </div>
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          {post.comments.length > 0 ? (
-            post.comments.map((comment) => (
-              <article
-                key={comment.id}
-                className="rounded-[1rem] border border-line bg-paper/80 p-4"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium text-ink">{comment.authorName}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs uppercase tracking-[0.14em] text-clay">
-                      {new Date(comment.createdAt).toLocaleDateString()}
-                    </p>
-                    {comment.authorName === currentUsername ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          deleteCommunityComment(post.id, comment.id)
-                        }
-                        className="soft-ring rounded-full border border-line bg-paper px-3 py-1 text-xs uppercase tracking-[0.14em] text-clay hover:border-clay hover:text-ink"
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-                <p className="mt-2 whitespace-pre-line text-sm leading-7 text-clay">
-                  {comment.body}
-                </p>
-              </article>
-            ))
-          ) : (
-            <div className="rounded-[1rem] border border-dashed border-line bg-paper/70 p-4 text-center text-sm text-clay lg:col-span-2">
-              No comments yet.
-            </div>
-          )}
-        </div>
-        <form onSubmit={submitComment} className="mt-4 rounded-[1rem] bg-accent/30 p-4">
-          <p className="text-sm text-clay">Commenting as {currentUsername}</p>
-          <textarea
-            value={commentDraft}
-            onChange={(event) => setCommentDraft(event.target.value)}
-            className="mt-3 min-h-[88px] w-full resize-y rounded-[1rem] border border-line bg-paper px-4 py-3 text-sm leading-7 text-ink outline-none soft-ring focus:border-clay"
-            placeholder="Write a comment, question, or related insight."
-          />
-          <button
-            type="submit"
-            disabled={!commentDraft.trim()}
-            className="soft-ring mt-3 rounded-full border border-moss bg-moss px-5 py-2 text-sm font-medium text-paper transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:border-line disabled:bg-line disabled:text-clay"
-          >
-            Add comment
-          </button>
-        </form>
-      </section>
     </main>
+  );
+}
+
+function ResultCard({
+  result
+}: {
+  result: ReturnType<typeof getCommunityPollResults>[number];
+}) {
+  return (
+    <article className="rounded-[1rem] bg-accent p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className={`block h-3 w-3 rounded-full ${result.swatchClass}`} />
+          <h3 className="mt-3 font-[family-name:var(--font-heading)] text-2xl font-semibold leading-tight tracking-[-0.04em] text-ink">
+            {result.label}
+          </h3>
+        </div>
+        <p className="font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-[-0.05em] text-ink tabular-nums">
+          {result.percentage.toFixed(result.percentage % 1 ? 1 : 0)}%
+        </p>
+      </div>
+      <div className="mt-4 h-3 overflow-hidden rounded-full bg-paper">
+        <div
+          className={`h-full rounded-full ${result.barClass}`}
+          style={{ width: `${result.percentage}%` }}
+        />
+      </div>
+      <p className="mt-3 text-sm font-medium text-clay">{result.votes} votes</p>
+    </article>
+  );
+}
+
+function CommentsPanel({
+  post,
+  currentUsername,
+  commentDraft,
+  onCommentDraftChange,
+  onCommentSubmit,
+  onDeleteComment
+}: {
+  post: CommunityPost;
+  currentUsername: string;
+  commentDraft: string;
+  onCommentDraftChange: (value: string) => void;
+  onCommentSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onDeleteComment: (commentId: string) => void;
+}) {
+  return (
+    <section className="rounded-[1.25rem] bg-paper p-5 shadow-[0_18px_52px_rgba(0,0,0,0.18)]">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm font-semibold text-moss">Comments</p>
+        <span className="text-sm text-clay">{post.comments.length}</span>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {post.comments.length > 0 ? (
+          post.comments.map((comment) => (
+            <article key={comment.id} className="rounded-[1rem] bg-accent p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-ink">{comment.authorName}</p>
+                {comment.authorName === currentUsername ? (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteComment(comment.id)}
+                    className="soft-ring rounded-full bg-paper px-3 py-1 text-xs font-semibold text-clay hover:bg-line hover:text-ink"
+                  >
+                    Delete
+                  </button>
+                ) : null}
+              </div>
+              <p className="mt-2 whitespace-pre-line text-sm leading-7 text-clay">
+                {comment.body}
+              </p>
+            </article>
+          ))
+        ) : (
+          <p className="rounded-[1rem] border border-dashed border-line bg-paper/70 p-4 text-center text-sm text-clay">
+            No comments yet.
+          </p>
+        )}
+      </div>
+      <form onSubmit={onCommentSubmit} className="mt-4">
+        <textarea
+          value={commentDraft}
+          onChange={(event) => onCommentDraftChange(event.target.value)}
+          className="min-h-[88px] w-full resize-y rounded-[1rem] border border-line bg-paper px-4 py-3 text-sm leading-7 text-ink outline-none soft-ring focus:border-clay"
+          placeholder="Write a comment, question, or related insight."
+        />
+        <button
+          type="submit"
+          disabled={!commentDraft.trim()}
+          className="soft-ring mt-3 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:-translate-y-0.5 hover:bg-moss disabled:cursor-not-allowed disabled:bg-line disabled:text-clay"
+        >
+          Add comment
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-full bg-accent px-5 py-3">
+      <span className="text-sm font-semibold text-ink">{value}</span>
+      <span className="ml-2 text-sm text-clay">{label}</span>
+    </div>
   );
 }

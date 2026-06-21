@@ -1,158 +1,38 @@
 # MorningStar
 
-MorningStar is a Next.js learning app for reading English news, saving vocabulary, bookmarking articles, and sharing short community investigations or polls. It uses Supabase for authentication and user data, and an n8n webhook for the news collection workflow.
+MorningStar is a personalized English news learning web app.
+
+It helps learners read English news by interest, save useful expressions, bookmark articles, and share short investigation or poll-based discussions with other users.
+
+## Overview
+
+MorningStar was built as a learning-focused news platform. Instead of simply listing articles, the app connects news reading with vocabulary study, user interests, and lightweight community activities.
+
+Users can sign up, choose their interests, read curated English news, save vocabulary from articles, and create their own investigation notes based on selected sources.
+
+## Key Features
+
+- Supabase-based sign up, login, email verification, and password reset
+- Interest onboarding for personalized article feeds
+- Article bookmarking
+- Vocabulary saving with meanings and example sentences
+- Custom source and investigation creation
+- Community analysis posts, polls, comments, and votes
+- n8n-connected news collection workflow
+- Responsive UI built with Next.js and Tailwind CSS
 
 ## Tech Stack
 
-- Next.js 15 App Router
-- React 19
+- Next.js
+- React
 - TypeScript
 - Tailwind CSS
-- Supabase Auth and Postgres
-- n8n webhook integration
-- Spline visual embed proxy routes
+- Supabase
+- n8n
+- Vercel
 
-## Features
+## Project Notes
 
-- Email/password authentication through Supabase
-- Interest onboarding and personalized article feeds
-- Bookmark and vocabulary saving
-- Custom source and investigation flows
-- Community analysis posts, polls, comments, and votes
-- n8n-triggered news collection endpoint
-- Spline scene rendering through Next.js route handlers
+This project was developed as a full-stack web application combining frontend interaction, authentication, database persistence, and automation workflow integration.
 
-## Project Structure
-
-```text
-app/          Next.js routes and API route handlers
-components/   UI components
-providers/    Client-side learning state provider
-lib/          Data models, static data, and Supabase helpers
-supabase/     Schema, seed data, and migration SQL files
-docs/         Setup notes and data model documentation
-scripts/      Verification scripts
-```
-
-## Environment Variables
-
-Create `.env.local` locally. Do not commit it.
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-N8N_WEBHOOK_URL=
-```
-
-`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are exposed to the browser by design. Supabase table access must be protected with Row Level Security policies.
-
-`N8N_WEBHOOK_URL` must stay server-side only. It is used by `app/api/n8n/trigger/route.ts` and should be stored as a secret environment variable in Vercel.
-
-## Local Development
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-Build for production:
-
-```bash
-npm run build
-```
-
-## Supabase Setup
-
-See `docs/supabase-setup.md` for the full setup flow.
-
-At a minimum:
-
-1. Create a Supabase project.
-2. Run the schema and migration SQL files that match the current app state.
-3. Enable email/password auth.
-4. Add local and production redirect URLs:
-
-```text
-http://localhost:3000/auth/callback
-http://localhost:3000/reset-password
-https://your-domain.com/auth/callback
-https://your-domain.com/reset-password
-```
-
-5. Verify that Row Level Security is enabled for user-owned tables before public deployment.
-
-## Vercel Deployment
-
-Recommended deployment target: Vercel.
-
-Use the default project settings:
-
-```text
-Framework Preset: Next.js
-Root Directory: ./
-Build Command: npm run build
-Output Directory: .next
-Install Command: npm install
-```
-
-Add these environment variables in Vercel for Production and Preview:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-N8N_WEBHOOK_URL
-```
-
-After deploying, add the Vercel production URL to Supabase Auth redirect URLs.
-
-## n8n Webhook Notes
-
-The app does not expose the n8n webhook URL to the browser. The browser calls:
-
-```text
-/api/n8n/trigger
-```
-
-The Next.js route handler then calls `N8N_WEBHOOK_URL` from the server environment.
-
-For a stable production setup, use a fixed n8n domain or subdomain such as:
-
-```text
-https://n8n.example.com/webhook/...
-```
-
-If the webhook URL was ever committed or shared publicly, rotate it before deployment.
-
-## Security Checklist Before Deployment
-
-- Confirm `.env.local` is not tracked by Git.
-- Rotate any secrets that were previously committed, especially `N8N_WEBHOOK_URL`.
-- Store secrets only in Vercel Environment Variables.
-- Enable Supabase Row Level Security on user-owned tables.
-- Check Supabase policies for `users`, `bookmarks`, `saved_vocabulary`, `custom_sources`, `investigations`, and community tables.
-- Add only trusted redirect URLs in Supabase Auth settings.
-- Keep the repository free of local logs, `.agents`, `.codex`, and generated build output.
-- Run `npm audit --omit=dev` and `npm run build` before release.
-
-## Verification Commands
-
-```bash
-npm run build
-npm audit --omit=dev
-npm run verify:supabase
-```
-
-Use `npm run verify:supabase:write` only against a database where temporary test rows are acceptable.
+The main focus was to build a practical learning experience where news reading, vocabulary review, and user participation are connected in one flow.

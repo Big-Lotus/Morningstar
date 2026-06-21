@@ -42,7 +42,7 @@ import {
   getInvestigations,
   InvestigationSourceInput
 } from "@/lib/db/investigations";
-import { createUser, getUserByUsername } from "@/lib/db/users";
+import { ensureUserProfile, getUserById } from "@/lib/db/users";
 import {
   addSavedVocabulary,
   deleteSavedVocabulary,
@@ -83,6 +83,7 @@ type PersistedAuthState = {
 type LearningStoreValue = {
   currentUsername: string | null;
   authError: string;
+  authMessage: string;
   isHydrated: boolean;
   savedWords: SavedVocabulary[];
   bookmarkedSlugs: string[];
@@ -93,6 +94,12 @@ type LearningStoreValue = {
   customArticles: Article[];
   communityPosts: CommunityPost[];
   login: (username: string, password: string) => Promise<boolean>;
+  signup: (
+    username: string,
+    password: string,
+    displayName: string
+  ) => Promise<"signed-in" | "pending" | "failed">;
+  sendPasswordReset: (username: string) => Promise<boolean>;
   logout: () => void;
   setSelectedInterests: (interests: Category[]) => void;
   completeOnboarding: () => void;
@@ -151,6 +158,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
   const [accounts, setAccounts] = useState<Record<string, StoredAccount>>({});
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [authError, setAuthError] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
   const [savedWords, setSavedWords] = useState<SavedVocabulary[]>([]);
   const [bookmarkedSlugs, setBookmarkedSlugs] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterestsState] = useState<Category[]>([]);
@@ -205,12 +213,14 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    let isCancelled = false;
     const raw = window.localStorage.getItem(STORAGE_KEY);
+    let fallbackAccount: StoredAccount | undefined;
 
     if (raw) {
       const parsed = JSON.parse(raw) as PersistedAuthState;
       const username = parsed.currentUsername;
-      const account = username
+      fallbackAccount = username
         ? parsed.accounts[accountKey(username)]
         : undefined;
 
@@ -220,58 +230,80 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           (post) => post.title !== "good"
         )
       );
+    } else {
+      const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
 
-      if (username && isSupabaseConfigured) {
-        setCurrentUsername(username);
-        getUserByUsername(username)
-          .then(async (user) => {
-            if (!user) {
-              setCurrentUsername(null);
-              loadUserState(emptyUserState);
-              return;
-            }
+      if (legacyRaw) {
+        const legacy = JSON.parse(legacyRaw) as Partial<UserScopedState> & {
+          composedArticles?: Array<ComposedArticle & { body?: string }>;
+          communityPosts?: CommunityPost[];
+        };
 
-            setCurrentUserId(user.id);
-            setCurrentUsername(user.username);
-            await loadRemoteUserState(user.id);
-          })
-          .catch((error) => {
-            reportRecoverableError("Failed to restore Supabase session.", error);
-            setCurrentUsername(null);
-            loadUserState(emptyUserState);
-          })
-          .finally(() => {
-            setIsHydrated(true);
-          });
-        return;
+        setCommunityPosts(
+          normalizeCommunityPosts(legacy.communityPosts ?? []).filter(
+            (post) => post.title !== "good"
+          )
+        );
       }
-
-      setCurrentUsername(account?.username ?? null);
-
-      if (account) {
-        loadUserState(cleanUserState(account.state));
-      }
-
-      setIsHydrated(true);
-      return;
     }
 
-    const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (isSupabaseConfigured && supabase) {
+      supabase.auth
+        .getUser()
+        .then(async ({ data, error }) => {
+          if (isCancelled) {
+            return;
+          }
 
-    if (legacyRaw) {
-      const legacy = JSON.parse(legacyRaw) as Partial<UserScopedState> & {
-        composedArticles?: Array<ComposedArticle & { body?: string }>;
-        communityPosts?: CommunityPost[];
+          if (error || !data.user) {
+            setCurrentUsername(null);
+            setCurrentUserId(null);
+            loadUserState(emptyUserState);
+            return;
+          }
+
+          const user = await ensureAuthProfile(
+            data.user.id,
+            data.user.email ?? "",
+            getAuthDisplayName(data.user)
+          );
+
+          if (isCancelled) {
+            return;
+          }
+
+          setCurrentUserId(user.id);
+          setCurrentUsername(user.username);
+          await loadRemoteUserState(user.id);
+        })
+        .catch((error) => {
+          reportRecoverableError("Failed to restore Supabase session.", error);
+          setCurrentUsername(null);
+          setCurrentUserId(null);
+          loadUserState(emptyUserState);
+        })
+        .finally(() => {
+          if (!isCancelled) {
+            setIsHydrated(true);
+          }
+        });
+
+      return () => {
+        isCancelled = true;
       };
+    }
 
-      setCommunityPosts(
-        normalizeCommunityPosts(legacy.communityPosts ?? []).filter(
-          (post) => post.title !== "good"
-        )
-      );
+    setCurrentUsername(fallbackAccount?.username ?? null);
+
+    if (fallbackAccount) {
+      loadUserState(cleanUserState(fallbackAccount.state));
     }
 
     setIsHydrated(true);
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -336,6 +368,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
     () => ({
       currentUsername,
       authError,
+      authMessage,
       isHydrated,
       savedWords,
       bookmarkedSlugs,
@@ -346,59 +379,148 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       customArticles,
       communityPosts,
       login: async (username, password) => {
-        const normalizedUsername = username.trim();
-        const normalizedPassword = password.trim();
+        const normalizedUsername = username.trim().toLowerCase();
+        const normalizedPassword = password;
 
         if (!normalizedUsername || !normalizedPassword) {
-          setAuthError("Username and password are required.");
+          setAuthError("ID와 비밀번호를 입력해주세요.");
+          setAuthMessage("");
           return false;
         }
 
-        if (isSupabaseConfigured) {
+        if (isSupabaseConfigured && supabase) {
           try {
-            const passwordHash = await hashPassword(normalizedPassword);
-            const existingUser = await getUserByUsername(normalizedUsername);
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: normalizedUsername,
+              password: normalizedPassword
+            });
 
-            if (existingUser && existingUser.password_hash !== passwordHash) {
-              setAuthError("Password does not match this username.");
+            if (error || !data.user) {
+              setAuthError(toLoginErrorMessage(error?.message));
+              setAuthMessage("");
               return false;
             }
 
-            const user =
-              existingUser ??
-              (await createUser({
-                username: normalizedUsername,
-                passwordHash
-              }));
+            const user = await ensureAuthProfile(
+              data.user.id,
+              data.user.email ?? normalizedUsername,
+              getAuthDisplayName(data.user)
+            );
 
             setCurrentUserId(user.id);
             setCurrentUsername(user.username);
             setAuthError("");
+            setAuthMessage("");
             await loadRemoteUserState(user.id);
             return true;
           } catch (error) {
             reportRecoverableError(
-              "Supabase login failed. Falling back to local state.",
+              "Supabase login failed.",
               error
             );
+            setAuthError("로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            setAuthMessage("");
+            return false;
           }
         }
 
         const key = accountKey(normalizedUsername);
         const existingAccount = accounts[key];
 
-        if (existingAccount && existingAccount.password !== normalizedPassword) {
-          setAuthError("Password does not match this username.");
+        if (!existingAccount || existingAccount.password !== normalizedPassword) {
+          setAuthError("없는 ID 또는 비밀번호 입니다.");
+          setAuthMessage("");
           return false;
         }
 
-        const account =
-          existingAccount ??
-          ({
-            username: normalizedUsername,
-            password: normalizedPassword,
-            state: emptyUserState
-          } satisfies StoredAccount);
+        setCurrentUsername(existingAccount.username);
+        setCurrentUserId(null);
+        loadUserState(existingAccount.state);
+        setAuthError("");
+        setAuthMessage("");
+        return true;
+      },
+      signup: async (username, password, displayName) => {
+        const normalizedUsername = username.trim().toLowerCase();
+        const normalizedPassword = password;
+        const normalizedDisplayName = displayName.trim();
+
+        if (!normalizedUsername || !normalizedPassword || !normalizedDisplayName) {
+          setAuthError("이메일, username, 비밀번호를 입력해주세요.");
+          setAuthMessage("");
+          return "failed";
+        }
+
+        if (isSupabaseConfigured && supabase) {
+          try {
+            const { data, error } = await supabase.auth.signUp({
+              email: normalizedUsername,
+              password: normalizedPassword,
+              options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
+                data: {
+                  username: normalizedDisplayName
+                }
+              }
+            });
+
+            if (error || !data.user) {
+              setAuthError(
+                toAuthErrorMessage(error?.message, "회원가입을 완료하지 못했습니다.")
+              );
+              setAuthMessage("");
+              return "failed";
+            }
+
+            setAuthError("");
+
+            if (data.session) {
+              const user = await ensureAuthProfile(
+                data.user.id,
+                data.user.email ?? normalizedUsername,
+                normalizedDisplayName
+              );
+
+              setCurrentUserId(user.id);
+              setCurrentUsername(user.username);
+              setAuthMessage("회원가입이 완료되어 로그인되었습니다.");
+              await loadRemoteUserState(user.id);
+              return "signed-in";
+            } else {
+              setCurrentUserId(null);
+              setCurrentUsername(null);
+              loadUserState(emptyUserState);
+              setAuthMessage("");
+              window.localStorage.setItem(
+                "saetbyeol-pending-signup",
+                JSON.stringify({
+                  email: normalizedUsername,
+                  username: normalizedDisplayName
+                })
+              );
+              return "pending";
+            }
+          } catch (error) {
+            reportRecoverableError("Supabase signup failed.", error);
+            setAuthError("회원가입을 완료하지 못했습니다.");
+            setAuthMessage("");
+            return "failed";
+          }
+        }
+
+        const key = accountKey(normalizedUsername);
+
+        if (accounts[key]) {
+          setAuthError("이미 가입된 ID입니다.");
+          setAuthMessage("");
+          return "failed";
+        }
+
+        const account = {
+          username: normalizedDisplayName,
+          password: normalizedPassword,
+          state: emptyUserState
+        } satisfies StoredAccount;
 
         setAccounts((current) => ({
           ...current,
@@ -408,12 +530,64 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         setCurrentUserId(null);
         loadUserState(account.state);
         setAuthError("");
-        return true;
+        setAuthMessage("회원가입이 완료되어 로그인되었습니다.");
+        return "signed-in";
+      },
+      sendPasswordReset: async (username) => {
+        const normalizedUsername = username.trim().toLowerCase();
+
+        if (!normalizedUsername) {
+          setAuthError("재설정 링크를 받을 이메일을 입력해주세요.");
+          setAuthMessage("");
+          return false;
+        }
+
+        if (!isSupabaseConfigured || !supabase) {
+          setAuthError("Supabase Auth 설정이 필요합니다.");
+          setAuthMessage("");
+          return false;
+        }
+
+        try {
+          const { error } = await supabase.auth.resetPasswordForEmail(
+            normalizedUsername,
+            {
+              redirectTo: `${window.location.origin}/reset-password`
+            }
+          );
+
+          if (error) {
+            setAuthError(
+              toAuthErrorMessage(
+                error.message,
+                "비밀번호 재설정 메일을 보내지 못했습니다."
+              )
+            );
+            setAuthMessage("");
+            return false;
+          }
+
+          setAuthError("");
+          setAuthMessage(
+            "가입된 이메일이면 비밀번호 재설정 링크가 전송됩니다."
+          );
+          return true;
+        } catch (error) {
+          reportRecoverableError("Failed to send password reset email.", error);
+          setAuthError("비밀번호 재설정 메일을 보내지 못했습니다.");
+          setAuthMessage("");
+          return false;
+        }
       },
       logout: () => {
+        if (isSupabaseConfigured && supabase) {
+          void supabase.auth.signOut();
+        }
+
         setCurrentUsername(null);
         setCurrentUserId(null);
         setAuthError("");
+        setAuthMessage("");
         loadUserState(emptyUserState);
       },
       setSelectedInterests: (interests) => {
@@ -988,6 +1162,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
     [
       accounts,
       authError,
+      authMessage,
       bookmarkedSlugs,
       communityPosts,
       composedArticles,
@@ -1120,13 +1295,73 @@ function accountKey(username: string) {
   return username.trim().toLowerCase();
 }
 
-async function hashPassword(password: string) {
-  const encoded = new TextEncoder().encode(password);
-  const digest = await window.crypto.subtle.digest("SHA-256", encoded);
+async function ensureAuthProfile(
+  userId: string,
+  email: string,
+  displayName?: string
+) {
+  const existingUser = await getUserById(userId);
 
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+  if (existingUser) {
+    return existingUser;
+  }
+
+  return ensureUserProfile({
+    id: userId,
+    email,
+    username: displayName?.trim() || usernameFromEmail(email)
+  });
+}
+
+function usernameFromEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  return normalizedEmail || `user-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+function getAuthDisplayName(user: { user_metadata?: Record<string, unknown> }) {
+  const username = user.user_metadata?.username;
+
+  return typeof username === "string" ? username : undefined;
+}
+
+function toAuthErrorMessage(message: string | undefined, fallback: string) {
+  if (!message) {
+    return fallback;
+  }
+
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes("rate limit")) {
+    return "이메일 발송 제한에 걸렸습니다. 잠시 후 다시 시도하거나 Supabase SMTP 설정을 확인해주세요.";
+  }
+
+  return message;
+}
+
+function toLoginErrorMessage(message: string | undefined) {
+  if (!message) {
+    return "없는 ID 또는 비밀번호 입니다.";
+  }
+
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes("email not confirmed")) {
+    return "이메일 인증을 먼저 완료해주세요.";
+  }
+
+  if (normalizedMessage.includes("rate limit")) {
+    return "로그인 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+  }
+
+  if (
+    normalizedMessage.includes("invalid login credentials") ||
+    normalizedMessage.includes("invalid credentials")
+  ) {
+    return "없는 ID 또는 비밀번호 입니다.";
+  }
+
+  return message;
 }
 
 function syncUserInterests(userId: string | null, interests: Category[]) {

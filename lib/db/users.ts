@@ -3,15 +3,31 @@ import { requireSupabase } from "@/lib/db/client";
 export type UserRecord = {
   id: string;
   username: string;
-  password_hash?: string;
+  email?: string | null;
+  password_hash?: string | null;
   created_at: string;
 };
+
+export async function getUserById(id: string) {
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from("users")
+    .select("id, username, email, password_hash, created_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as UserRecord | null;
+}
 
 export async function getUserByUsername(username: string) {
   const db = requireSupabase();
   const { data, error } = await db
     .from("users")
-    .select("id, username, password_hash, created_at")
+    .select("id, username, email, password_hash, created_at")
     .eq("username", username.trim())
     .maybeSingle();
 
@@ -22,21 +38,33 @@ export async function getUserByUsername(username: string) {
   return data as UserRecord | null;
 }
 
-export async function createUser({
+export async function ensureUserProfile({
+  id,
+  email,
   username,
-  passwordHash
+  passwordHash = null
 }: {
+  id: string;
+  email?: string | null;
   username: string;
-  passwordHash: string;
+  passwordHash?: string | null;
 }) {
   const db = requireSupabase();
+  const normalizedUsername = username.trim();
+  const normalizedEmail = email?.trim().toLowerCase() || null;
+
   const { data, error } = await db
     .from("users")
-    .insert({
-      username: username.trim(),
-      password_hash: passwordHash
-    })
-    .select("id, username, created_at")
+    .upsert(
+      {
+        id,
+        username: normalizedUsername,
+        email: normalizedEmail,
+        password_hash: passwordHash
+      },
+      { onConflict: "id" }
+    )
+    .select("id, username, email, password_hash, created_at")
     .single();
 
   if (error) {

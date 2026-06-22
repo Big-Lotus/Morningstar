@@ -7,30 +7,36 @@ type ArticleVisualProps = {
 
 const categoryVisuals: Record<
   Article["category"],
-  { seed: string; tint: string }
+  { imageUrl: string; tint: string }
 > = {
   National: {
-    seed: "seoul-civic-hall",
+    imageUrl:
+      "https://images.unsplash.com/photo-1534274867514-d5b47ef89ed7?auto=format&fit=crop&w=1200&q=80",
     tint: "rgba(91, 190, 178, 0.14)"
   },
   Business: {
-    seed: "market-glass-office",
+    imageUrl:
+      "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80",
     tint: "rgba(23, 23, 23, 0.1)"
   },
   "Life&Culture": {
-    seed: "museum-soft-gallery",
+    imageUrl:
+      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80",
     tint: "rgba(91, 190, 178, 0.12)"
   },
   Sports: {
-    seed: "baseball-field-day",
+    imageUrl:
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
     tint: "rgba(23, 23, 23, 0.08)"
   },
   World: {
-    seed: "global-summit-room",
+    imageUrl:
+      "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1200&q=80",
     tint: "rgba(91, 190, 178, 0.12)"
   },
   "K-pop": {
-    seed: "stage-lights-crowd",
+    imageUrl:
+      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=80",
     tint: "rgba(23, 23, 23, 0.1)"
   }
 };
@@ -44,7 +50,7 @@ export function ArticleVisual({ article, compact = false }: ArticleVisualProps) 
         compact ? "h-32" : "h-72"
       }`}
       style={{
-        backgroundImage: `linear-gradient(180deg, transparent 0%, ${visual.tint} 100%), url("https://picsum.photos/seed/${visual.seed}-${article.slug}/900/620")`,
+        backgroundImage: `linear-gradient(180deg, transparent 0%, ${visual.tint} 100%), url("${visual.imageUrl}")`,
         backgroundPosition: "center",
         backgroundSize: "cover"
       }}

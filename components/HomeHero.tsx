@@ -12,25 +12,29 @@ const pageCards = [
     href: "/",
     title: "Daily News",
     text: "Collected stories stay ready near the monitor.",
-    seed: "morningstar-news-wall"
+    imageUrl:
+      "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=900&q=80"
   },
   {
     href: "/vocabulary",
     title: "Vocab",
     text: "Save words with examples and source context.",
-    seed: "english-vocabulary-notes"
+    imageUrl:
+      "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=900&q=80"
   },
   {
     href: "/investigate",
     title: "Investigate",
     text: "Turn saved sources into a focused analysis.",
-    seed: "analysis-monitor-room"
+    imageUrl:
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80"
   },
   {
     href: "/community",
     title: "Community",
     text: "Share investigations and open issue rooms.",
-    seed: "soft-community-board"
+    imageUrl:
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80"
   }
 ];
 
@@ -61,7 +65,7 @@ export function HomeHero({ userId }: HomeHeroProps) {
                 <div
                   className="h-24 bg-accent md:h-28"
                   style={{
-                    backgroundImage: `linear-gradient(180deg,rgba(255,255,252,0.1),rgba(23,23,23,0.12)),url("https://picsum.photos/seed/${card.seed}/640/360")`,
+                    backgroundImage: `linear-gradient(180deg,rgba(255,255,252,0.1),rgba(23,23,23,0.12)),url("${card.imageUrl}")`,
                     backgroundPosition: "center",
                     backgroundSize: "cover"
                   }}

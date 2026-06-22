@@ -42,7 +42,12 @@ import {
   getInvestigations,
   InvestigationSourceInput
 } from "@/lib/db/investigations";
-import { ensureUserProfile, getUserById } from "@/lib/db/users";
+import {
+  ensureUserProfile,
+  getUserByEmail,
+  getUserById,
+  getUserByUsername
+} from "@/lib/db/users";
 import {
   addSavedVocabulary,
   deleteSavedVocabulary,
@@ -1351,10 +1356,54 @@ async function ensureAuthProfile(
     return existingUser;
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingEmailUser = await getUserByEmail(normalizedEmail);
+
+  if (existingEmailUser) {
+    return existingEmailUser;
+  }
+
+  const baseUsername = displayName?.trim() || usernameFromEmail(normalizedEmail);
+  let candidateUsername = baseUsername;
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const usernameOwner = await getUserByUsername(candidateUsername);
+
+    if (usernameOwner) {
+      candidateUsername = uniqueUsernameCandidate(baseUsername, userId, attempt);
+      continue;
+    }
+
+    try {
+      return await ensureUserProfile({
+        id: userId,
+        email: normalizedEmail,
+        username: candidateUsername
+      });
+    } catch (error) {
+      const emailOwner = await getUserByEmail(normalizedEmail);
+
+      if (emailOwner) {
+        return emailOwner;
+      }
+
+      if (isUniqueConstraintError(error)) {
+        candidateUsername = uniqueUsernameCandidate(
+          baseUsername,
+          userId,
+          attempt
+        );
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
   return ensureUserProfile({
     id: userId,
-    email,
-    username: displayName?.trim() || usernameFromEmail(email)
+    email: normalizedEmail,
+    username: uniqueUsernameCandidate(baseUsername, userId, 5)
   });
 }
 
@@ -1362,6 +1411,30 @@ function usernameFromEmail(email: string) {
   const normalizedEmail = email.trim().toLowerCase();
 
   return normalizedEmail || `user-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+function uniqueUsernameCandidate(username: string, userId: string, attempt: number) {
+  const suffix = userId.slice(0, 8);
+
+  return attempt === 0
+    ? `${username}-${suffix}`
+    : `${username}-${suffix}-${attempt + 1}`;
+}
+
+function isUniqueConstraintError(error: unknown) {
+  if (!isSupabaseErrorLike(error)) {
+    return false;
+  }
+
+  const code = typeof error.code === "string" ? error.code : "";
+  const message = typeof error.message === "string" ? error.message : "";
+  const details = typeof error.details === "string" ? error.details : "";
+
+  return (
+    code === "23505" ||
+    message.toLowerCase().includes("duplicate key") ||
+    details.toLowerCase().includes("already exists")
+  );
 }
 
 function getAuthDisplayName(user: { user_metadata?: Record<string, unknown> }) {

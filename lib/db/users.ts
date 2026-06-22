@@ -38,6 +38,27 @@ export async function getUserByUsername(username: string) {
   return data as UserRecord | null;
 }
 
+export async function getUserByEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from("users")
+    .select("id, username, email, password_hash, created_at")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as UserRecord | null;
+}
+
 export async function ensureUserProfile({
   id,
   email,

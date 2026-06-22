@@ -43,19 +43,35 @@ export async function addSavedVocabulary(
 ) {
   const db = requireSupabase();
   const sourceId = await getSourceId(userId, sourceType, entry.sourceSlug);
-  const { data, error } = await db
+  const row = {
+    id: entry.id,
+    user_id: userId,
+    source_type: sourceType,
+    source_id: sourceId,
+    word: entry.word,
+    meaning: entry.meaning,
+    sentence: entry.sentence
+  };
+  let { data, error } = await db
     .from("saved_vocabulary")
-    .insert({
-      id: entry.id,
-      user_id: userId,
-      source_type: sourceType,
-      source_id: sourceId,
-      word: entry.word,
-      meaning: entry.meaning,
-      sentence: entry.sentence
-    })
+    .insert(row)
     .select("*")
     .single();
+
+  if (isManualSourceConstraintError(error, sourceType)) {
+    const retry = await db
+      .from("saved_vocabulary")
+      .insert({
+        ...row,
+        source_type: "article",
+        source_id: sourceId || "manual"
+      })
+      .select("*")
+      .single();
+
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     throw error;
@@ -85,17 +101,32 @@ export async function updateSavedVocabulary(
 ) {
   const db = requireSupabase();
   const sourceId = await getSourceId(userId, sourceType, entry.sourceSlug);
-  const { error } = await db
+  const row = {
+    source_type: sourceType,
+    source_id: sourceId,
+    word: entry.word,
+    meaning: entry.meaning,
+    sentence: entry.sentence
+  };
+  let { error } = await db
     .from("saved_vocabulary")
-    .update({
-      source_type: sourceType,
-      source_id: sourceId,
-      word: entry.word,
-      meaning: entry.meaning,
-      sentence: entry.sentence
-    })
+    .update(row)
     .eq("user_id", userId)
     .eq("id", vocabularyId);
+
+  if (isManualSourceConstraintError(error, sourceType)) {
+    const retry = await db
+      .from("saved_vocabulary")
+      .update({
+        ...row,
+        source_type: "article",
+        source_id: sourceId || "manual"
+      })
+      .eq("user_id", userId)
+      .eq("id", vocabularyId);
+
+    error = retry.error;
+  }
 
   if (error) {
     throw error;
@@ -135,11 +166,11 @@ async function getSourceSlug(
   sourceId: string
 ) {
   if (sourceType === "manual") {
-    return sourceId;
+    return sourceId === "manual" ? undefined : sourceId;
   }
 
   if (sourceType === "article") {
-    return sourceId;
+    return sourceId === "manual" ? undefined : sourceId;
   }
 
   const db = requireSupabase();
@@ -154,4 +185,16 @@ async function getSourceSlug(
   }
 
   return data.slug as string;
+}
+
+function isManualSourceConstraintError(
+  error: { code?: string; message?: string } | null,
+  sourceType: VocabularySourceType
+) {
+  return Boolean(
+    error &&
+      sourceType === "manual" &&
+      error.code === "23514" &&
+      error.message?.includes("saved_vocabulary_source_type_check")
+  );
 }

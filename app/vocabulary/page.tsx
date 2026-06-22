@@ -16,6 +16,7 @@ export default function VocabularyPage() {
     removeWord,
     saveWord,
     savedWords,
+    syncError,
     updateWord
   } = useLearningStore();
   const sourceOptions = useMemo(
@@ -30,16 +31,21 @@ export default function VocabularyPage() {
   const [sentence, setSentence] = useState("");
   const [sourceSlug, setSourceSlug] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const selectedSourceSlug = sourceSlug || undefined;
 
-    saveWord({
+    const didSave = await saveWord({
       word,
       meaning,
       sentence,
       sourceSlug: selectedSourceSlug
     });
+
+    if (!didSave) {
+      return;
+    }
+
     setWord("");
     setMeaning("");
     setSentence("");
@@ -150,6 +156,11 @@ export default function VocabularyPage() {
         >
           Save word
         </button>
+        {syncError ? (
+          <p className="mt-3 text-sm leading-6 text-red-700" role="alert">
+            {syncError}
+          </p>
+        ) : null}
       </form>
 
       <section className="mt-8 space-y-4">

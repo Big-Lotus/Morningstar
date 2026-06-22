@@ -93,6 +93,7 @@ type LearningStoreValue = {
   composedArticles: ComposedArticle[];
   customArticles: Article[];
   communityPosts: CommunityPost[];
+  syncError: string;
   login: (username: string, password: string) => Promise<boolean>;
   signup: (
     username: string,
@@ -104,7 +105,7 @@ type LearningStoreValue = {
   setSelectedInterests: (interests: Category[]) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
-  saveWord: (entry: Omit<SavedVocabulary, "id">) => void;
+  saveWord: (entry: Omit<SavedVocabulary, "id">) => Promise<boolean>;
   hasSavedWord: (word: string, sentence: string) => boolean;
   updateWord: (id: string, entry: Omit<SavedVocabulary, "id">) => void;
   removeWord: (id: string) => void;
@@ -159,6 +160,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
+  const [syncError, setSyncError] = useState("");
   const [savedWords, setSavedWords] = useState<SavedVocabulary[]>([]);
   const [bookmarkedSlugs, setBookmarkedSlugs] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterestsState] = useState<Category[]>([]);
@@ -378,6 +380,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       composedArticles,
       customArticles,
       communityPosts,
+      syncError,
       login: async (username, password) => {
         const normalizedUsername = username.trim().toLowerCase();
         const normalizedPassword = password;
@@ -602,7 +605,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         setSelectedInterestsState([]);
         syncUserInterests(currentUserId, []);
       },
-      saveWord: (entry) => {
+      saveWord: async (entry) => {
         const normalizedWord = entry.word.trim();
         const normalizedMeaning = entry.meaning.trim();
         const normalizedSentence = entry.sentence.trim();
@@ -613,7 +616,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           !normalizedSentence ||
           !currentUsername
         ) {
-          return;
+          return false;
         }
 
         const alreadySaved = savedWords.some(
@@ -623,7 +626,7 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
         );
 
         if (alreadySaved) {
-          return;
+          return false;
         }
 
         const savedEntry = {
@@ -635,26 +638,41 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
           id: crypto.randomUUID()
         };
 
+        setSyncError("");
+
+        if (isSupabaseConfigured) {
+          const userId = await resolveRemoteUserId();
+
+          if (!userId) {
+            setSyncError(
+              "Supabase sync is not active. Sign out, restart the dev server, and sign in again before saving vocabulary."
+            );
+            return false;
+          }
+
+          try {
+            await addSavedVocabulary(
+              userId,
+              savedEntry,
+              savedEntry.sourceSlug
+                ? getSourceType(savedEntry.sourceSlug, [
+                    ...feedArticles,
+                    ...customArticles
+                  ])
+                : "manual"
+            );
+          } catch (error) {
+            reportRecoverableError("Failed to save vocabulary.", error);
+            setSyncError(toSyncErrorMessage(error, "save vocabulary"));
+            return false;
+          }
+        }
+
         setSavedWords((current) => {
           return [savedEntry, ...current];
         });
 
-        if (currentUserId && isSupabaseConfigured) {
-          runDbTask(
-            () =>
-              addSavedVocabulary(
-                currentUserId,
-                savedEntry,
-                savedEntry.sourceSlug
-                  ? getSourceType(savedEntry.sourceSlug, [
-                      ...feedArticles,
-                      ...customArticles
-                    ])
-                  : "manual"
-              ),
-            "save vocabulary"
-          );
-        }
+        return true;
       },
       hasSavedWord: (word, sentence) => {
         const normalizedWord = word.trim().toLowerCase();
@@ -1173,9 +1191,36 @@ export function LearningStoreProvider({ children }: PropsWithChildren) {
       hasCompletedOnboarding,
       isHydrated,
       savedWords,
+      syncError,
       selectedInterests
     ]
   );
+
+  async function resolveRemoteUserId() {
+    if (currentUserId) {
+      return currentUserId;
+    }
+
+    if (!isSupabaseConfigured || !supabase) {
+      return null;
+    }
+
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data.user) {
+      return null;
+    }
+
+    const user = await ensureAuthProfile(
+      data.user.id,
+      data.user.email ?? "",
+      getAuthDisplayName(data.user)
+    );
+
+    setCurrentUserId(user.id);
+    setCurrentUsername(user.username);
+    return user.id;
+  }
 
   function loadUserState(state: UserScopedState) {
     setSavedWords(state.savedWords ?? []);
@@ -1362,6 +1407,18 @@ function toLoginErrorMessage(message: string | undefined) {
   }
 
   return message;
+}
+
+function toSyncErrorMessage(error: unknown, action: string) {
+  if (error instanceof Error && error.message) {
+    return `Could not ${action}: ${error.message}`;
+  }
+
+  if (isSupabaseErrorLike(error) && typeof error.message === "string") {
+    return `Could not ${action}: ${error.message}`;
+  }
+
+  return `Could not ${action}. Check the browser console for details.`;
 }
 
 function syncUserInterests(userId: string | null, interests: Category[]) {
